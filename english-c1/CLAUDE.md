@@ -65,7 +65,7 @@ KI Knöpfe funktionieren nur dort.
 |---|---|
 | Grammar | 648 Fragen, davon 456 Original-Buchfragen aus Tests 1 bis 20 |
 | Vocabulary | 1011 Fragen (592 Collocation, 158 Word Pair, 146 Definition, 75 Usage, 40 Word Formation) |
-| Reading | 225 Fragen in 36 Tasks, 9 komplette Tests (A bis I) |
+| Reading | 313 Fragen in 52 Tasks, 9 komplette Tests (A bis I), davon 16 Einzelwort Übungsvarianten |
 | Zuordnungen (Fragen 26 bis 30) | 420 Items in 84 Aufgaben |
 | Karteikarten | 187 C1-Wörter plus 56 Reading-Wörter |
 | **Gesamt** | **2304 Testfragen** |
@@ -77,7 +77,9 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
 - `grammarPool`: `{t:'Grammar', g:<Themenindex>, q, a:[3], c, e}`
 - `vocabPool`: `{t:'Word Pair'|'Definition'|'Usage'|'Collocation'|'Word Formation', q, a:[3], c, e}`
 - `readingTexts`: `[{title:'Reading-Test X · Task N: Typ · Thema', text, qs:[{q,a,c,e}], sec, start}]`
-  Titelformat ist bindend, `buildFullReading()` gruppiert danach
+  Titelformat ist bindend, `buildFullReading()` gruppiert danach. `practice: true` markiert die alten Einzelwort
+  Task 3 und 4 von A bis H: nur Einzelübung, nie im kompletten Test (T-0005). Neue Texte immer hinten anhängen,
+  weil Fragen über den Index `p` an ihrem Text hängen
 - `matchTasks`: `[{type, theme, items:[{p,a,e}] (5 Stück), dist:[5]}]`
   Wortkasten = 5 Lösungen plus 5 Ablenker, immer genau 10 eindeutige Wörter
 - `words`, `readingWords`: Karteikarten `{w,p,d,s,b}`
@@ -164,7 +166,8 @@ Der Loader `tests/lib/portal.js` führt den Scriptblock in `node:vm` aus. Pools 
 holt man mit `loadPortal().get('grammarPool')`. Arrays aus dem vm Kontext vor `deepEqual` mit
 `toHost()` kopieren. Tier 3 Tests nutzen `usePortalBrowser()` aus `tests/lib/browser.js`
 (ein Browser pro Datei, Optionen `panel`, `fakeClock`, `initScript`). Gemeinsame Prüfregeln für Fragen in
-`tests/lib/assertions.js` (`checkChoice`, `nonEmpty`). Keine externen Pakete nötig.
+`tests/lib/assertions.js` (`checkChoice`, `nonEmpty`), Titelformat der Reading Tests in `tests/lib/reading.js`
+(`parseReadingTitle`). Keine externen Pakete nötig.
 
 **Manuelle Validierung (ersetzt durch die Tests oben, Reihenfolge bleibt gleich):**
 
@@ -180,10 +183,11 @@ Reading- und Matching-Arrays werden mit `json.dumps(..., ensure_ascii=False)` er
 1. **Speaking**: Trainer mit Prüfungszeiten, 24 Aufgaben, Vorlagen, Phrasenbank und Checkliste
    sind fertig (T-0002). Offen: Aufnahme im Browser und KI Feedback (T-0003)
 2. **Listening**: Trainer mit 46 Fragen und Sprachausgabe fertig (T-0003). Offen: mehr Aufnahmen, Akzente
-3. Reading Teil 3 und 4: Nur Test I nutzt das offizielle Phrasenformat.
-   Tests A bis H haben Einzelwort-Optionen, das ist eher Aptis General
+3. Reading Teil 3 und 4: alle neun kompletten Tests nutzen jetzt das Phrasenformat (T-0005).
+   Die Buchvarianten mit Einzelwörtern bleiben als Einzelübung
 4. Rekonstruierte Inhalte (nicht aus dem Buch): Reading-Tests E bis H teilweise,
-   Dark Matter, Bilingual Brain, Fast Fashion. Beim Weiterbauen weiter transparent halten
+   Dark Matter, Bilingual Brain, Fast Fashion. Dazu alle Task 3 und 4 im Phrasenformat von A bis H,
+   alle Speaking und Listening Inhalte. Beim Weiterbauen weiter transparent halten
 
 ## Offizielle Quellen
 

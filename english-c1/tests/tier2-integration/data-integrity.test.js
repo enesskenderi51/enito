@@ -4,10 +4,10 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPortal } = require('../lib/portal');
 const { checkChoice } = require('../lib/assertions');
+const { parseReadingTitle } = require('../lib/reading');
 
 const portal = loadPortal();
 const VOCAB_TYPES = new Set(['Word Pair', 'Definition', 'Usage', 'Collocation', 'Word Formation']);
-const READING_TITLE = /^Reading-Test [A-Z] · Task \d+: (.+) · .+$/;
 // Optionen pro Reading Tasktyp. Opinion Matching hat vier Personen (A bis D).
 const READING_OPTIONS = { 'Opinion Matching': 4 };
 
@@ -34,10 +34,10 @@ test('vocabPool: Format und Typ', () => {
 
 test('readingTexts: bindendes Titelformat und Fragen', () => {
   portal.get('readingTexts').forEach((r, i) => {
-    const match = r.title.match(READING_TITLE);
-    assert.ok(match, `readingTexts[${i}]: Titelformat ${r.title}`);
+    const parsed = parseReadingTitle(r.title);
+    assert.ok(parsed, `readingTexts[${i}]: Titelformat ${r.title}`);
     assert.ok(r.text && r.qs.length > 0, `readingTexts[${i}]: Text oder Fragen fehlen`);
-    const optionCount = READING_OPTIONS[match[1]] ?? 3;
+    const optionCount = READING_OPTIONS[parsed.type] ?? 3;
     r.qs.forEach((q, j) => checkChoice(q, `readingTexts[${i}].qs[${j}]`, { options: optionCount }));
   });
 });
