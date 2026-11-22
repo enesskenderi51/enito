@@ -98,6 +98,11 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
     Standard `BrowserVoiceEngine` (Web Speech API). `rankVoices` bevorzugt Englisch, en-GB, neuronale Stimmen und das
     passende Geschlecht. Externe Stimmen sind im Artifact gesperrt, eine andere Engine muss nur diese Schnittstelle erfüllen
   - `PlayLimiter` (max 2 Durchgänge pro Aufnahme), `buildListeningRound`, `scoreListening`, `sameRecording`
+- Core Diagnose (T-0004), Karte `#coreDiag` im Plan Tab:
+  - Historie der Runden `core` und `exam` in `aptis-core-history-v1` (`[{date,mode,points}]`, max 30), `recordCoreRun` in `simFinish`
+  - `coreForecast` (Mittel der letzten 3, Abstand zu 44), `leverageList` (Gewinn = Anteil am Core x 50 x Fehlerquote,
+    Fehlerquote mit `laplaceAccuracy` geglättet), `coreShares` aus `byTopic` und `byVocabType`
+  - `renderCoreDiagnosis` läuft über `updateTopicInfo`, `recordCoreRun` und `loadCoreHistory`
 
 ### Lernlogik
 
@@ -152,7 +157,7 @@ Escaping-Falle in quoted Heredocs: `\'` einfach schreiben, nie `\\'`.
 |---|---|---|---|
 | `npm run test:t1` | 1 | Syntax, div Bilanz aller Tabs, reine Funktionen | unter 1 Sek. |
 | `npm run test:t2` | 2 | Datenintegrität aller Pools | unter 1 Sek. |
-| `npm run test:t3` | 3 | Playwright: alle Tabs, Speaking mit simulierter Uhr, Listening mit simulierter Sprachausgabe | rund 5 Sek. |
+| `npm run test:t3` | 3 | Playwright: alle Tabs, Speaking, Listening, Core Diagnose mit simuliertem Speicher | rund 5 Sek. |
 | `npm test` | 1 und 2 | vor jedem Commit | |
 
 Der Loader `tests/lib/portal.js` führt den Scriptblock in `node:vm` aus. Pools und Funktionen

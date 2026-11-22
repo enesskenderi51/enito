@@ -4326,6 +4326,8 @@ footer{text-align:center;font-size:13px;color:var(--ink-soft);padding:30px 20px;
   <h2>Dein Lernplan</h2>
   <p class="lede">Aus deinen bisherigen Sessions: stark bei Inversion, Subjunctive und Causative. Schwächer bei Synonymen, Word Formation, would/used to und Prepositional Phrases. Der Plan trainiert genau diese Lücken und automatisiert die Formate von Writing und Speaking.</p>
 
+  <div class="card" id="coreDiag" style="border:2px solid var(--petrol)"></div>
+
   <div class="card weak">
     <h4>Deine Prioritäten</h4>
     <table>
@@ -6892,7 +6894,7 @@ function updateTopicOverview(){
   }).join('')+'<br><span style="color:var(--ink-soft)">\u2713 sitzt, kommt als Auffrischung zur\u00fcck &nbsp; \u25CF in Arbeit &nbsp; \u26A0 schwach, kommt \u00f6fter &nbsp; \u25CB noch nicht getestet</span>'
     +(pr?'<div style="margin-top:8px"><strong>Empfehlung f\u00fcr die n\u00e4chste Runde:</strong><br>'+pr+'</div>':'');
 }
-function updateTopicInfo(){updateTopicOverview();
+function updateTopicInfo(){updateTopicOverview();renderCoreDiagnosis();
   const el=document.getElementById('topicInfo');if(!el)return;
   const labels=Object.keys(byTopic);
   if(!labels.length){el.textContent='';return;}
@@ -7267,7 +7269,7 @@ const vocabPartKey={'Word Pair':'wp','Definition':'def','Usage':'usage','Colloca
 function startLabel(lab){
   const gi=topicDefs.findIndex(function(t){return t.label===lab;});
   if(gi>=0){goTopic(gi);return;}
-  if(vocabPartKey[lab])startSim(vocabPartKey[lab]);
+  if(vocabPartKey[lab])goSim(vocabPartKey[lab]);
 }
 function priorityList(max){
   const labels=Object.keys(byTopic).concat(Object.keys(byVocabType));
@@ -7449,6 +7451,7 @@ function simFinish(timeout){
   let total=0;simQs.forEach(function(x){total+=(x.items&&x.bank)?5:1;});
   const answered=simIdx;
   const ratio=simScore/total;
+  recordCoreRun(simMode,simScore,total);
   let band='B1',msg='Fokus auf die Grundlisten legen, dann steigt das schnell.';
   if(ratio>=0.85){band='C1 bis C2';msg='Hervorragend, klar auf C1-Kurs. Halte das Niveau mit woechentlichen Simulationen.';}
   else if(ratio>=0.65){band='C1-Kurs';msg='Stark! Arbeite unten die Fehler durch, dann sitzt das C1.';}
@@ -7478,7 +7481,74 @@ function simFinish(timeout){
 }
 
 /* Karteikarten initialisieren (vocabPool ist jetzt definiert) */
-buildDecks();switchDeck('cards');initKnown();loadMastery();loadRecent();buildMeaningMaps();assignTopics();loadTopicStats();
+/* ============ Core Diagnose (T-0004) ============
+   Prognose aus gespeicherten Core Runden, Hebelliste aus topicStats. Mathematik als reine Funktionen. */
+const CORE_MAX=50,CORE_C1=44,CORE_HISTORY_MAX=30,CORE_KEY='aptis-core-history-v1',CORE_MODES=Object.freeze(['core','exam']);
+function coreScaled(score,total){return total?Math.round(score/total*CORE_MAX):0;}
+function appendCoreRun(history,run,max){return history.concat([run]).slice(-max);}
+function coreForecast(history){
+  if(!history.length)return null;
+  const last3=history.slice(-3);
+  const avg=Math.round(last3.reduce(function(s,r){return s+r.points;},0)/last3.length);
+  return {avg:avg,n:last3.length,gap:Math.max(0,CORE_C1-avg),recent:history.slice(-5).map(function(r){return r.points;})};
+}
+/* Laplace Glättung: unbekannt = 0,5, wenige Antworten schlagen nicht voll durch. */
+function laplaceAccuracy(s){return s?(s.c+1)/(s.seen+2):0.5;}
+/* Möglicher Punktgewinn = Anteil am Core x 50 x Fehlerquote (geglättet). Zurück kommen die rohen Zähler. */
+function leverageList(stats,shares,max){
+  return Object.keys(shares).map(function(l){
+    const s=stats[l]||{c:0,seen:0};
+    return {label:l,c:s.c,seen:s.seen,gain:Math.round(shares[l]*CORE_MAX*(1-laplaceAccuracy(stats[l]))*10)/10};
+  }).sort(function(a,b){return b.gain-a.gain;}).slice(0,max);
+}
+/* Anteile am Core: halb Grammatik, halb Vokabeln, innerhalb nach Poolgrösse (Näherung für die Prüfung). */
+function coreShares(){
+  const out={};
+  Object.keys(byTopic).forEach(function(l){out[l]=0.5*byTopic[l].length/grammarPool.length;});
+  Object.keys(byVocabType).forEach(function(l){out[l]=0.5*byVocabType[l].length/vocabPool.length;});
+  return out;
+}
+
+let coreHistory=[];
+async function loadCoreHistory(){
+  try{const r=await window.storage.get(CORE_KEY);if(r&&r.value)coreHistory=JSON.parse(r.value)||[];}catch(e){}
+  renderCoreDiagnosis();
+}
+function recordCoreRun(mode,score,total){
+  if(CORE_MODES.indexOf(mode)<0)return;
+  coreHistory=appendCoreRun(coreHistory,{date:new Date().toISOString().slice(0,10),mode:mode,points:coreScaled(score,total)},CORE_HISTORY_MAX);
+  try{window.storage.set(CORE_KEY,JSON.stringify(coreHistory));}catch(e){}
+  renderCoreDiagnosis();
+}
+function renderCoreDiagnosis(){
+  const el=document.getElementById('coreDiag');if(!el)return;
+  const f=coreForecast(coreHistory);
+  let h='<h4>Core Diagnose (live)</h4>';
+  if(f){
+    h+='<p style="font-size:15px"><strong>Prognose: '+f.avg+' von '+CORE_MAX+'</strong> (Mittel der letzten '+f.n+' Core Runden). '
+      +(f.gap?'Bis C1 ('+CORE_C1+') fehlen <strong>'+f.gap+' Punkte</strong>.':'<strong>C1 Niveau erreicht.</strong>')+'</p>'
+      +'<p style="font-size:13px;color:var(--ink-soft)">Verlauf: '+f.recent.join(' · ')+'</p>';
+  }else{
+    h+='<p style="font-size:14px">Noch keine Core Runde gespeichert. Starte eine Prüfung, danach siehst du hier deine Prognose.</p>';
+  }
+  h+='<div style="margin:8px 0 14px"><button class="btn gold" data-coresim="exam">Core Prüfung starten</button></div>';
+  const lev=leverageList(topicStats,coreShares(),5);
+  h+='<h4>Die 5 grössten Hebel (sortiert nach möglichem Punktgewinn, nicht nach Lernstand)</h4><table><tr><th>Bereich</th><th>Trefferquote</th><th>Möglicher Gewinn</th><th></th></tr>'
+    +lev.map(leverRow).join('')
+    +'</table><p style="font-size:12px;color:var(--ink-soft);margin-top:8px">Gewinn = Anteil am Core x 50 x Fehlerquote. Die Anteile sind aus dem Fragenpool geschätzt, die Punkte sind Rohpunkte der Simulation. Die genaue Skalierung des British Council ist nicht öffentlich.</p>';
+  el.innerHTML=h;
+}
+function leverRow(x){
+  return '<tr><td>'+esc(x.label)+'</td><td>'+(x.seen?Math.round(x.c/x.seen*100)+' % ('+x.c+'/'+x.seen+')':'noch offen')+'</td><td>bis '+x.gain+' Punkte</td>'
+    +'<td><button class="btn ghost" style="font-size:12px;padding:5px 10px" data-corelabel="'+esc(x.label)+'">Üben</button></td></tr>';
+}
+document.getElementById('coreDiag').addEventListener('click',function(ev){
+  const sim=ev.target.closest('[data-coresim]'),lab=ev.target.closest('[data-corelabel]');
+  if(sim)goSim(sim.dataset.coresim);
+  else if(lab)startLabel(lab.dataset.corelabel);
+});
+
+buildDecks();switchDeck('cards');initKnown();loadMastery();loadRecent();buildMeaningMaps();assignTopics();loadTopicStats();loadCoreHistory();
 </script>
 <div id="seriesReport" style="display:none;max-width:900px;margin:20px auto;padding:0 16px"></div>
 </body>
