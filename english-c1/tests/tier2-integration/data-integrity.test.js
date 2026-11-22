@@ -3,20 +3,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPortal } = require('../lib/portal');
+const { checkChoice } = require('../lib/assertions');
 
 const portal = loadPortal();
 const VOCAB_TYPES = new Set(['Word Pair', 'Definition', 'Usage', 'Collocation', 'Word Formation']);
 const READING_TITLE = /^Reading-Test [A-Z] · Task \d+: (.+) · .+$/;
 // Optionen pro Reading Tasktyp. Opinion Matching hat vier Personen (A bis D).
 const READING_OPTIONS = { 'Opinion Matching': 4 };
-
-function checkChoice(q, where, optionCount = 3) {
-  assert.ok(typeof q.q === 'string' && q.q.trim(), `${where}: Frage leer`);
-  assert.ok(Array.isArray(q.a) && q.a.length === optionCount, `${where}: ${q.a.length} statt ${optionCount} Optionen`);
-  assert.ok(Number.isInteger(q.c) && q.c >= 0 && q.c < q.a.length, `${where}: Lösungsindex ungültig`);
-  const norm = q.a.map((x) => String(x).trim().toLowerCase());
-  assert.equal(new Set(norm).size, q.a.length, `${where}: doppelte Optionen ${JSON.stringify(q.a)}`);
-}
 
 test('Mindestmengen laut CLAUDE.md', () => {
   const min = { grammarPool: 648, vocabPool: 1011, readingTexts: 36, matchTasks: 84, words: 187, readingWords: 56 };
@@ -45,7 +38,7 @@ test('readingTexts: bindendes Titelformat und Fragen', () => {
     assert.ok(match, `readingTexts[${i}]: Titelformat ${r.title}`);
     assert.ok(r.text && r.qs.length > 0, `readingTexts[${i}]: Text oder Fragen fehlen`);
     const optionCount = READING_OPTIONS[match[1]] ?? 3;
-    r.qs.forEach((q, j) => checkChoice(q, `readingTexts[${i}].qs[${j}]`, optionCount));
+    r.qs.forEach((q, j) => checkChoice(q, `readingTexts[${i}].qs[${j}]`, { options: optionCount }));
   });
 });
 

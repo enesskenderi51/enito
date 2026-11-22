@@ -3857,6 +3857,40 @@ footer{text-align:center;font-size:13px;color:var(--ink-soft);padding:30px 20px;
   <h2>Listening</h2>
   <p class="lede">30 Minuten, 11 Aufgaben mit 11 Aufnahmen. Die meisten Aufnahmen kannst du zweimal hören. Getestet wird zunehmend Meinung und Haltung, nicht nur Fakten.</p>
 
+  <h3>Listening Trainer mit Sprachausgabe</h3>
+  <div class="card">
+    <p style="font-size:14px;margin-bottom:12px">Lies zuerst Frage und Optionen, dann spiel die Aufnahme ab. Wie in der Prüfung darfst du jede Aufnahme höchstens zweimal hören. Nach der Antwort siehst du Erklärung und Transkript. <em>Die Hörtexte sind selbst erstellt im Aptis Advanced Format, nicht aus dem Buch.</em></p>
+    <div style="text-align:center">
+      <button class="btn gold" data-lsmode="full">Kompletter Test</button>
+      <button class="btn" data-lsmode="part1">Teil 1</button>
+      <button class="btn" data-lsmode="part2">Teil 2</button>
+      <button class="btn" data-lsmode="part3">Teil 3</button>
+      <button class="btn ghost" id="lsAbort">Abbrechen</button>
+    </div>
+    <p style="font-size:13px;margin-top:10px;text-align:center">Tempo
+      <select id="lsRate"><option value="0.85">langsamer</option><option value="1" selected>normal</option><option value="1.1">schneller</option></select>
+    </p>
+    <p id="lsVoiceInfo" style="font-size:13px;color:var(--ink-soft);text-align:center"></p>
+    <details><summary>So bekommst du die beste Stimme</summary>
+      <ul class="clean" style="font-size:14px;padding:0 14px 10px">
+        <li>iPhone und iPad: Einstellungen, Bedienungshilfen, Gesprochene Inhalte, Stimmen, Englisch (Grossbritannien). Eine Stimme mit "Premium" oder "Erweitert" laden, danach die Seite neu öffnen.</li>
+        <li>Mac: Systemeinstellungen, Bedienungshilfen, Gesprochene Inhalte, Systemstimme, Stimmen verwalten. Englisch (UK) Premium laden.</li>
+        <li>Windows: Microsoft Edge nutzen. Dort stehen die neuronalen "Natural" Stimmen ohne Installation bereit.</li>
+        <li>Android und Chrome: die Google UK English Stimmen sind vorinstalliert.</li>
+      </ul>
+    </details>
+    <div id="lsArea" style="display:none;margin-top:16px">
+      <div class="sim-head"><strong id="lsPos"></strong><button class="btn gold" id="lsPlay">Abspielen</button></div>
+      <p id="lsTitle" style="font-size:14px;color:var(--ink-soft)"></p>
+      <div class="qtext" id="lsQ"></div>
+      <div class="opts" id="lsOpts"></div>
+      <div class="expl" id="lsExpl"></div>
+      <details id="lsTransBox" style="display:none"><summary>Transkript</summary><div id="lsTrans" style="padding:0 14px 10px"></div></details>
+      <div style="text-align:center;margin-top:12px"><button class="btn" id="lsNext" disabled>Weiter</button></div>
+    </div>
+    <div id="lsResult" style="display:none;margin-top:16px"></div>
+  </div>
+
   <div class="grid2">
     <div class="card">
       <h4>Teil 1: Fünf kurze Aufnahmen</h4>
@@ -5242,7 +5276,13 @@ class ShuffleBag{
     this.last=this.bag.pop();
     return this.last;
   }
+  take(n){
+    const seen=new Set();
+    while(seen.size<Math.min(n,this.size))seen.add(this.next());
+    return [...seen];
+  }
 }
+function bagsFor(pool){return Object.fromEntries(Object.keys(pool).map(function(k){return [k,new ShuffleBag(pool[k].length)];}));}
 
 function speakingStage(part,kind,task,question){const t=SPEAKING_TIMES[kind];return {part:part,kind:kind,task:task,question:question,prep:t.prep,speak:t.speak};}
 const SPEAKING_PARTS={
@@ -5287,7 +5327,7 @@ class SpeakingSession{
 }
 
 /* ---- UI ---- */
-const speakingBags=Object.fromEntries(Object.keys(speakingTasks).map(function(k){return [k,new ShuffleBag(speakingTasks[k].length)];}));
+const speakingBags=bagsFor(speakingTasks);
 function pickSpeakingTasks(){return Object.fromEntries(Object.keys(speakingTasks).map(function(k){return [k,speakingTasks[k][speakingBags[k].next()]];}));}
 function speakingList(items){return '<ul class="clean" style="font-size:14px">'+items.map(function(x){return '<li class="en">'+esc(x)+'</li>';}).join('')+'</ul>';}
 const SPEAKING_PROMPTS={
@@ -5342,6 +5382,166 @@ document.getElementById('spAbort').addEventListener('click',function(){
   document.getElementById('spArea').style.display='none';
 });
 renderSpeakingStatic();
+
+/* ============ Listening Trainer (T-0003) ============
+   Daten: eingefrorene Konstanten. Stimme: Strategy mit speak(script, opts) und cancel(),
+   Standard ist BrowserVoiceEngine (Web Speech API, beste Stimme des Geräts). */
+const listeningTasks=Object.freeze({"part1": [{"id": "l1-meeting", "title": "Voicemail from a colleague", "script": [{"sp": "f", "text": "Hi Tom, it's Rachel. About tomorrow's site meeting. I know we said nine o'clock, and I did ask for half past eight at one point, but the client can't make it before ten. So let's say ten, and I'll book the small room on the second floor."}], "q": "What time will the meeting start?", "a": ["8:30", "9:00", "10:00"], "c": 2, "e": "Korrekturfalle: 9 Uhr war abgemacht, 8:30 nur ein früherer Vorschlag. Entscheidend ist: the client can't make it before ten. So let's say ten."}, {"id": "l1-train", "title": "Two friends at a station", "script": [{"sp": "m", "text": "Our train's been cancelled. Shall we just get a taxi?"}, {"sp": "f", "text": "A taxi to the airport would cost a fortune at this time of day. There's a bus in twenty minutes, but it stops everywhere. Actually, the next train is only forty minutes away, and it's direct. Let's grab a coffee and wait for that."}], "q": "How will they travel to the airport?", "a": ["by taxi", "by bus", "by train"], "c": 2, "e": "Alle drei Verkehrsmittel werden genannt. Taxi ist zu teuer, der Bus hält überall. Nach Actually kommt die Entscheidung: der nächste Zug ist direkt."}, {"id": "l1-budget", "title": "Project update", "script": [{"sp": "m", "text": "Quick update on the fibre rollout. We originally budgeted two hundred thousand francs. The latest estimate came in at two hundred and fifty, but after renegotiating with the subcontractor we've brought it down to two hundred and twenty. That's the figure I'll present to the board."}], "q": "Which budget figure will the speaker present?", "a": ["200,000 francs", "220,000 francs", "250,000 francs"], "c": 1, "e": "Zahlenfalle: drei Beträge. Die Frage fragt nach dem, was er dem Board präsentiert: two hundred and twenty nach der Nachverhandlung."}, {"id": "l1-course", "title": "Advice about a course", "script": [{"sp": "f", "text": "Honestly, the evening course looked convenient, and the online one is cheaper, but if you want to pass in January you need the intensive weekend course. The others simply don't give you enough speaking practice."}], "q": "What does the woman recommend?", "a": ["the evening course", "the online course", "the intensive weekend course"], "c": 2, "e": "Die anderen Kurse werden erwähnt, aber mit Nachteilen. Empfehlung: you need the intensive weekend course, weil nur er genug Sprechpraxis bietet."}, {"id": "l1-flat", "title": "Talking about a new flat", "script": [{"sp": "m", "text": "So, did you take the flat in the end?"}, {"sp": "f", "text": "I nearly did. The location was perfect and the rent was reasonable. But when I saw how little natural light it got, I just couldn't picture myself working from home there. So I'm still looking."}], "q": "Why did the woman reject the flat?", "a": ["It was too expensive.", "It was too dark.", "It was badly located."], "c": 1, "e": "Paraphrase: how little natural light it got heisst too dark. Lage und Miete waren gut, also falsche Fährten."}, {"id": "l1-delivery", "title": "Phone call to a supplier", "script": [{"sp": "m", "text": "Hello, I'm calling about our order of cable ducts. It was supposed to arrive on Monday."}, {"sp": "f", "text": "Yes, I can see that. Unfortunately our lorry broke down. We could deliver a partial order on Wednesday, but the full order will be with you on Friday. Would you prefer to wait for everything?"}, {"sp": "m", "text": "Splitting it just causes extra paperwork for us. We'll wait."}], "q": "When will the man receive the goods?", "a": ["on Monday", "on Wednesday", "on Friday"], "c": 2, "e": "Montag war der ursprüngliche Termin, Mittwoch nur eine Teillieferung. Er sagt We'll wait, also kommt alles am Freitag."}, {"id": "l1-feedback", "title": "A manager gives feedback", "script": [{"sp": "f", "text": "Your report was thorough, and the figures were all correct. What I'd like to see next time is a clearer summary at the beginning. The board members are busy people, and they won't read twenty pages to find the main point."}], "q": "What does the manager want to improve?", "a": ["the accuracy of the figures", "the length of the report", "the opening summary"], "c": 2, "e": "Paraphrase: a clearer summary at the beginning ist the opening summary. Die Zahlen werden gelobt. Die zwanzig Seiten begründen den Wunsch, sind aber nicht die Kritik selbst."}, {"id": "l1-weather", "title": "Weekend plans", "script": [{"sp": "m", "text": "Are we still going hiking on Saturday?"}, {"sp": "f", "text": "The forecast says heavy rain on Saturday, but Sunday looks dry, if a bit cold. I'd rather freeze than get soaked."}, {"sp": "m", "text": "Fair enough. Sunday it is, then."}], "q": "Why do they change their plan?", "a": ["Saturday will be too cold.", "Saturday will be wet.", "Sunday will be warmer."], "c": 1, "e": "Heavy rain on Saturday heisst nass. Kalt ist es am Sonntag, und trotzdem wählen sie den Sonntag: I'd rather freeze than get soaked."}, {"id": "l1-interview", "title": "After a job interview", "script": [{"sp": "f", "text": "So how did the interview go?"}, {"sp": "m", "text": "Better than I expected, to be honest. I was worried about the technical questions, but they were fine. What threw me was when they asked why I wanted to leave my current job. I hadn't prepared for that at all."}], "q": "What did the man find difficult?", "a": ["the technical questions", "a question about his reasons for leaving", "the length of the interview"], "c": 1, "e": "Er hatte Sorge wegen der technischen Fragen, die waren aber fine. What threw me heisst: das hat ihn aus dem Konzept gebracht."}, {"id": "l1-gym", "title": "Message about a gym membership", "script": [{"sp": "m", "text": "Hi, this is Marco from City Fitness. Your membership expires at the end of this month. If you renew for twelve months, it's forty francs a month. Six months is fifty a month. Or you can stay on the flexible plan, which is sixty-five, but you can cancel at any time."}], "q": "How much does the twelve-month membership cost per month?", "a": ["40 francs", "50 francs", "65 francs"], "c": 0, "e": "Drei Preise in Folge. Die Frage zielt auf twelve months, und dazu gehört forty francs a month."}], "part2": [{"id": "l2-remote", "title": "A team leader on remote work", "script": [{"sp": "f", "text": "When our company went fully remote, I assumed productivity would fall. In fact, the opposite happened, at least at first. People were delighted to skip the commute and put in longer hours. What I didn't anticipate was the slow erosion of informal contact. The quick chat by the coffee machine, where half our best ideas used to come from, simply disappeared. Two years on, I'd say we're efficient but rather uninspired. We now bring the team together every Tuesday, not for meetings, but just to work side by side. It's made a remarkable difference."}], "qs": [{"q": "What surprised the speaker most about remote work?", "a": ["Productivity dropped quickly.", "Spontaneous exchanges were lost.", "Staff refused to work longer hours."], "c": 1, "e": "What I didn't anticipate signalisiert die Überraschung: the slow erosion of informal contact. Die Produktivität stieg, also ist Option 1 falsch."}, {"q": "How does she feel about the Tuesday arrangement?", "a": ["It has been very effective.", "It is too time-consuming.", "It has had little impact."], "c": 0, "e": "Bewertungswort: a remarkable difference. Paraphrase für very effective."}]}, {"id": "l2-ai", "title": "A teacher on artificial intelligence", "script": [{"sp": "m", "text": "Many of my colleagues see AI as a threat. They worry that students will stop thinking for themselves. I understand that concern, but I think it's somewhat overstated. Calculators didn't destroy mathematics. What does worry me is that students rarely question what these tools produce. They treat the answer as fact. So in my classes, I deliberately give them AI-generated texts that contain errors, and their job is to find them. It's become one of their favourite exercises."}], "qs": [{"q": "What is the speaker's view of his colleagues' concern?", "a": ["He shares it completely.", "He thinks it is exaggerated.", "He considers it irrelevant."], "c": 1, "e": "Somewhat overstated ist eine Paraphrase für exaggerated. Er versteht die Sorge, also ist sie nicht irrelevant. Völlig teilt er sie aber nicht."}, {"q": "What is his main concern about AI?", "a": ["Students accept its output uncritically.", "It makes mathematics unnecessary.", "It is too difficult for students to use."], "c": 0, "e": "What does worry me zeigt seine eigene Sorge: students rarely question what these tools produce. Das bedeutet uncritically."}]}, {"id": "l2-city", "title": "An architect on city centres", "script": [{"sp": "f", "text": "People often blame online shopping for the decline of our town centres, and it certainly plays a role. But in my view, the bigger problem is that we designed centres purely for consumption. Once shopping moved online, there was nothing left to come for. The towns that are thriving today have turned empty shops into libraries, workshops and housing. They give people a reason to linger. Frankly, I'm optimistic. This crisis has forced planners to rethink what a centre is for."}], "qs": [{"q": "According to the speaker, what is the main cause of the decline?", "a": ["Online shopping", "Centres were built only for shopping", "A lack of housing"], "c": 1, "e": "Erwähnen ist nicht zustimmen: Online Shopping plays a role, aber the bigger problem is that we designed centres purely for consumption."}, {"q": "What is her attitude towards the future?", "a": ["Hopeful", "Uncertain", "Pessimistic"], "c": 0, "e": "Frankly, I'm optimistic ist eine direkte Haltung. Hopeful ist die Paraphrase."}]}, {"id": "l2-failure", "title": "An entrepreneur on failure", "script": [{"sp": "m", "text": "My first company went bankrupt after eighteen months. At the time it felt like the end of the world, and I won't pretend it was a valuable experience while it was happening. It wasn't. It was miserable. But looking back, it taught me something no business course could: how to tell the difference between a good idea and a good business. They're not the same thing. My second company was built on a far less exciting idea, and it's been profitable for eight years."}], "qs": [{"q": "How did the speaker feel when his first company failed?", "a": ["He saw it as a useful lesson.", "He found it extremely unpleasant.", "He was relieved."], "c": 1, "e": "Falle: Er sagt ausdrücklich, dass es damals keine wertvolle Erfahrung war: It wasn't. It was miserable. Die Lektion kam erst looking back."}, {"q": "What did he learn from the experience?", "a": ["Exciting ideas are essential for success.", "A good idea does not guarantee a successful business.", "Business courses are useless."], "c": 1, "e": "How to tell the difference between a good idea and a good business. They're not the same thing. Die Kurse werden nur zum Vergleich erwähnt."}]}, {"id": "l2-language", "title": "A translator on language learning", "script": [{"sp": "f", "text": "People keep asking me whether translation apps will make language learning pointless. I can see why they'd think so. The apps are astonishingly good now. But a language isn't just a code to be cracked. When you learn one, you learn how other people think, what they find funny, what they consider rude. No app gives you that. That said, I do think schools should spend less time on grammar drills and far more on actual conversation."}], "qs": [{"q": "What does the speaker say about translation apps?", "a": ["They are of poor quality.", "They cannot convey cultural understanding.", "They will soon replace translators."], "c": 1, "e": "Die Apps sind astonishingly good, also nicht schlecht. Aber: you learn how other people think... No app gives you that. Das ist kulturelles Verständnis."}, {"q": "What change would she like to see in schools?", "a": ["More focus on speaking", "More grammar practice", "More use of technology"], "c": 0, "e": "Nach That said kommt die eigentliche Forderung: less time on grammar drills and far more on actual conversation."}]}, {"id": "l2-sport", "title": "A coach on young athletes", "script": [{"sp": "m", "text": "Parents often push their children to specialise in one sport very early, hoping they'll become professionals. The research suggests this is counterproductive. Children who try several sports until about the age of fourteen tend to have fewer injuries and stay in sport longer. The ones who specialise at eight often burn out by sixteen. I'm not saying talent doesn't matter. It obviously does. But talent without enjoyment rarely lasts."}], "qs": [{"q": "What does the coach think of early specialisation?", "a": ["It is the key to success.", "It tends to have negative effects.", "It only suits talented children."], "c": 1, "e": "Counterproductive heisst: es schadet dem eigentlichen Ziel. Belegt durch Verletzungen und burn out."}, {"q": "What is his final point?", "a": ["Talent is more important than enjoyment.", "Enjoyment is needed for long-term success.", "Parents should not get involved."], "c": 1, "e": "Talent without enjoyment rarely lasts. Er gibt zu, dass Talent zählt, betont aber die Freude als Bedingung."}]}], "part3": [{"id": "l3-fourday", "title": "Discussion: the four-day week", "script": [{"sp": "m", "text": "I read that more companies are trying a four-day week. Some people claim it boosts productivity, but I find that hard to believe."}, {"sp": "f", "text": "The trials I've seen do show productivity holding up, though. People waste less time when they know the week is shorter."}, {"sp": "m", "text": "Maybe in offices. But in construction or healthcare, you can't just close on Fridays. Someone has to cover."}, {"sp": "f", "text": "That's true, it wouldn't work everywhere. Still, I think it would make companies far more attractive to young applicants."}, {"sp": "m", "text": "On that we agree. My nephew turned down a job last year because they wouldn't even discuss flexible hours."}], "items": [{"s": "A four-day week makes workers more productive.", "c": 1, "e": "Der Mann erwähnt die Behauptung nur, um sie abzulehnen: I find that hard to believe. Die Frau stützt sie mit den Trials."}, {"s": "It is unsuitable for some sectors.", "c": 2, "e": "Der Mann nennt Bau und Pflege, die Frau stimmt zu: That's true, it wouldn't work everywhere."}, {"s": "It would help firms recruit young people.", "c": 2, "e": "Die Frau sagt es, der Mann bestätigt: On that we agree."}, {"s": "Employees use their time more efficiently in a shorter week.", "c": 1, "e": "People waste less time when they know the week is shorter. Das sagt nur die Frau."}]}, {"id": "l3-cash", "title": "Discussion: a cashless society", "script": [{"sp": "f", "text": "I haven't used cash in months. Honestly, I think we should just get rid of it."}, {"sp": "m", "text": "It's convenient, I'll give you that. But what about my grandmother? She doesn't have a smartphone and doesn't trust online banking."}, {"sp": "f", "text": "Fair point. Although banks could offer simple cards for people like her."}, {"sp": "m", "text": "Possibly. My bigger worry is privacy, though. Every coffee you buy is recorded somewhere."}, {"sp": "f", "text": "I'm not too bothered about that. If you've got nothing to hide..."}], "items": [{"s": "Paying digitally is convenient.", "c": 2, "e": "Die Frau zahlt nur noch digital, der Mann räumt ein: It's convenient, I'll give you that."}, {"s": "Older people could be excluded.", "c": 0, "e": "Das Beispiel mit der Grossmutter bringt der Mann. Die Frau sagt nur Fair point und schlägt eine Lösung vor."}, {"s": "Cash should be abolished completely.", "c": 1, "e": "We should just get rid of it. Das sagt die Frau."}, {"s": "Digital payments threaten personal privacy.", "c": 0, "e": "My bigger worry is privacy. Die Frau ist darüber nicht besorgt: I'm not too bothered."}]}, {"id": "l3-tourism", "title": "Discussion: limiting tourists", "script": [{"sp": "m", "text": "Have you seen that Venice is charging day-trippers an entry fee now?"}, {"sp": "f", "text": "About time. Residents can barely walk through their own city in summer."}, {"sp": "m", "text": "I understand that, but a fee just means only wealthy people get to see these places."}, {"sp": "f", "text": "I don't think a few euros keeps anyone away. If anything, it should be higher."}, {"sp": "m", "text": "Well, I'd rather see better spreading of visitors across the year. Most of the damage happens in July and August."}], "items": [{"s": "Overcrowding affects local residents.", "c": 2, "e": "Die Frau sagt es direkt, der Mann bestätigt: I understand that."}, {"s": "The entry fee is too low.", "c": 1, "e": "If anything, it should be higher. Das sagt nur die Frau."}, {"s": "Fees make travel a privilege of the rich.", "c": 0, "e": "Only wealthy people get to see these places. Die Frau widerspricht."}, {"s": "Visitors should be distributed more evenly over the year.", "c": 0, "e": "Better spreading of visitors across the year schlägt der Mann vor."}]}, {"id": "l3-ai", "title": "Discussion: AI at work", "script": [{"sp": "f", "text": "Our department started using an AI tool for writing reports. It saves me about an hour a day."}, {"sp": "m", "text": "Same here. Although I always have to check the figures. It made up a statistic last week."}, {"sp": "f", "text": "Really? I haven't had that problem. But I do worry that junior staff won't learn to write properly."}, {"sp": "m", "text": "I'm less concerned about that. They'll just learn different skills, like editing and fact-checking."}, {"sp": "f", "text": "Maybe. Either way, I can't imagine going back now."}], "items": [{"s": "The AI tool saves time.", "c": 2, "e": "Die Frau spart eine Stunde pro Tag, der Mann sagt Same here."}, {"s": "The tool has produced incorrect information.", "c": 0, "e": "It made up a statistic last week. Die Frau hatte das Problem nicht."}, {"s": "Young employees may not develop writing skills.", "c": 1, "e": "Die Sorge äussert die Frau. Der Mann ist less concerned."}, {"s": "New skills will replace old ones.", "c": 0, "e": "They'll just learn different skills, like editing. Das sagt der Mann."}]}, {"id": "l3-cars", "title": "Discussion: electric company cars", "script": [{"sp": "m", "text": "Management wants to switch the whole fleet to electric by next year."}, {"sp": "f", "text": "Good. The running costs are so much lower, and it looks good for the company."}, {"sp": "m", "text": "Running costs, yes. But our technicians drive two hundred kilometres a day in the mountains. In winter the range drops dramatically."}, {"sp": "f", "text": "Couldn't they charge at the customer's site?"}, {"sp": "m", "text": "Some could. But it's not reliable enough to plan around. I'd start with the city teams and see how it goes."}, {"sp": "f", "text": "A gradual approach. Yes, I suppose that's more sensible."}], "items": [{"s": "Electric cars are cheaper to run.", "c": 2, "e": "Die Frau nennt die Kosten, der Mann bestätigt: Running costs, yes."}, {"s": "Range is a problem in cold weather.", "c": 0, "e": "In winter the range drops dramatically. Das sagt der Mann."}, {"s": "The switch should be introduced step by step.", "c": 2, "e": "Der Mann schlägt vor, mit den Stadtteams zu starten. Die Frau stimmt zu: that's more sensible."}, {"s": "The change would improve the company image.", "c": 1, "e": "It looks good for the company. Das sagt nur die Frau."}]}, {"id": "l3-social", "title": "Discussion: teenagers and social media", "script": [{"sp": "f", "text": "There's talk of banning social media for under-sixteens. What do you think?"}, {"sp": "m", "text": "In principle I'm in favour. The effect on their sleep and concentration is well documented."}, {"sp": "f", "text": "I agree it's harmful. But a ban? Kids will find a way around it within a week."}, {"sp": "m", "text": "Maybe, but laws also send a signal. Look at smoking."}, {"sp": "f", "text": "Smoking took decades. I think schools teaching media literacy would achieve more, and faster."}], "items": [{"s": "Social media harms young people.", "c": 2, "e": "Der Mann nennt Schlaf und Konzentration, die Frau sagt I agree it's harmful."}, {"s": "A ban would be easy to get around.", "c": 1, "e": "Kids will find a way around it. Das sagt die Frau."}, {"s": "Laws can change attitudes over time.", "c": 0, "e": "Laws also send a signal. Look at smoking. Das ist das Argument des Mannes."}, {"s": "Education would be more effective than a ban.", "c": 1, "e": "Schools teaching media literacy would achieve more. Das sagt die Frau."}]}]});
+const LISTENING_SPEAKERS=Object.freeze(['Man','Woman','Both']);
+const LISTENING_LABELS=Object.freeze({f:'Woman',m:'Man'});
+const LISTENING_MODES=Object.freeze({full:{part1:5,part2:3,part3:3},part1:{part1:5},part2:{part2:3},part3:{part3:3}});
+const LISTENING_MAX_PLAYS=2;
+
+function splitSentences(text){return String(text).trim().split(/(?<=[.!?])\s+/).filter(Boolean);}
+
+/* Stimmenauswahl: Englisch Pflicht, en-GB und neuronale Stimmen bevorzugt, Geschlecht über den Namen. */
+const VOICE_QUALITY=/natural|neural|online|premium|enhanced|siri/i;
+const VOICE_FEMALE=/female|sonia|libby|maisie|serena|kate|martha|stephanie|fiona|samantha|karen|moira|tessa|susan|hazel|emma|aria|jenny|ava|allison|victoria/i;
+const VOICE_MALE=/\bmale\b|ryan|thomas|daniel|arthur|oliver|george|alex|fred|guy|eric|aaron|gordon/i;
+function voiceScore(v,gender){
+  const want=gender==='f'?VOICE_FEMALE:VOICE_MALE,other=gender==='f'?VOICE_MALE:VOICE_FEMALE;
+  return (/^en[-_]GB/i.test(v.lang)?3:1)+(VOICE_QUALITY.test(v.name)?4:0)+(/google/i.test(v.name)?2:0)+(want.test(v.name)?5:0)-(other.test(v.name)?5:0);
+}
+function rankVoices(voices,gender){
+  return voices.filter(function(v){return /^en/i.test(v.lang);})
+    .map(function(v,i){return {v:v,s:voiceScore(v,gender),i:i};})
+    .sort(function(a,b){return b.s-a.s||a.i-b.i;}).map(function(x){return x.v;});
+}
+function pickVoicePair(voices){
+  const f=rankVoices(voices,'f')[0]||null,males=rankVoices(voices,'m');
+  const m=males.find(function(v){return v!==f;})||males[0]||null;
+  return {f:f,m:m};
+}
+
+class BrowserVoiceEngine{
+  constructor(synth,Utterance){this.synth=synth;this.Utterance=Utterance;this.done=null;}
+  describeVoices(){return pickVoicePair(this.synth.getVoices());}
+  onVoicesChanged(cb){if(this.synth.addEventListener)this.synth.addEventListener('voiceschanged',cb);}
+  speak(script,opts){
+    this.cancel();
+    const pair=this.describeVoices(),samevoice=pair.f===pair.m;
+    const queue=script.flatMap((seg)=>splitSentences(seg.text).map((t)=>({sp:seg.sp,text:t})));
+    return new Promise((resolve)=>{
+      this.done=resolve;
+      let i=0;
+      const next=()=>{
+        if(this.done!==resolve)return;
+        if(i>=queue.length){this.done=null;resolve();return;}
+        const seg=queue[i++],voice=pair[seg.sp],u=new this.Utterance(seg.text);
+        u.voice=voice;u.lang=voice?voice.lang:'en-GB';u.rate=opts.rate||1;
+        u.pitch=samevoice?(seg.sp==='m'?0.8:1.2):1;
+        u.onend=next;u.onerror=next;
+        this.synth.speak(u);
+      };
+      next();
+    });
+  }
+  cancel(){const d=this.done;if(d){this.done=null;this.synth.cancel();d();}}
+}
+
+/* Abspiellimit wie in der Prüfung. */
+class PlayLimiter{
+  constructor(max){this.max=max;this.used=0;this.playing=false;}
+  get left(){return this.max-this.used;}
+  get state(){return this.playing?'playing':this.left>0?'ready':'usedUp';}
+  start(){
+    if(this.playing)throw new Error('Aufnahme läuft bereits');
+    if(this.left<=0)throw new Error('Alle Durchgänge verbraucht');
+    this.used++;this.playing=true;
+  }
+  finish(){this.playing=false;}
+}
+
+const LISTENING_PARTS={
+  1:function(t){return [{part:1,task:t,q:t.q,a:t.a,c:t.c,e:t.e}];},
+  2:function(t){return t.qs.map(function(x){return {part:2,task:t,q:x.q,a:x.a,c:x.c,e:x.e};});},
+  3:function(t){return t.items.map(function(x){return {part:3,task:t,q:x.s,a:LISTENING_SPEAKERS,c:x.c,e:x.e||''};});}
+};
+function sameRecording(a,b){return !!a&&!!b&&a.task===b.task;}
+function buildListeningRound(picked){
+  return [1,2,3].flatMap(function(p){return (picked['part'+p]||[]).flatMap(LISTENING_PARTS[p]);});
+}
+function scoreListening(round,answers){
+  const byPart={};let correct=0;
+  round.forEach(function(item,i){
+    const ok=answers[i]===item.c?1:0;correct+=ok;
+    const p=byPart[item.part]||(byPart[item.part]=[0,0]);p[0]+=ok;p[1]++;
+  });
+  return {correct:correct,total:round.length,byPart:byPart};
+}
+
+/* ---- UI ---- */
+const listeningBags=bagsFor(listeningTasks);
+function pickListening(mode){
+  const counts=LISTENING_MODES[mode];
+  return Object.fromEntries(Object.keys(counts).map(function(k){return [k,listeningBags[k].take(counts[k]).map(function(i){return listeningTasks[k][i];})];}));
+}
+const listeningEngine=(window.speechSynthesis&&typeof SpeechSynthesisUtterance!=='undefined')?new BrowserVoiceEngine(window.speechSynthesis,SpeechSynthesisUtterance):null;
+let lsRound=[],lsIdx=0,lsAnswers=[],lsLimiters={};
+const lsEl=function(id){return document.getElementById(id);};
+function showVoiceInfo(){
+  if(!listeningEngine){lsEl('lsVoiceInfo').textContent='Dieser Browser hat keine Sprachausgabe. Du kannst trotzdem mit dem Transkript üben.';return;}
+  const pair=listeningEngine.describeVoices();
+  lsEl('lsVoiceInfo').textContent=pair.f?('Stimmen: Frau = '+pair.f.name+', Mann = '+pair.m.name):'Noch keine englische Stimme geladen.';
+}
+function lsLimiter(item){return lsLimiters[item.task.id]||(lsLimiters[item.task.id]=new PlayLimiter(LISTENING_MAX_PLAYS));}
+function renderPlayButton(){
+  const lim=lsLimiter(lsRound[lsIdx]),btn=lsEl('lsPlay');
+  btn.disabled=lim.state!=='ready'||!listeningEngine;
+  btn.textContent=lim.state==='playing'?'Läuft...':lim.state==='usedUp'?'Keine Durchgänge mehr':'Abspielen ('+lim.left+' übrig)';
+}
+function renderListeningItem(){
+  const item=lsRound[lsIdx];
+  lsEl('lsPos').textContent='Teil '+item.part+' · Frage '+(lsIdx+1)+' von '+lsRound.length;
+  lsEl('lsTitle').textContent=item.task.title+(sameRecording(item,lsRound[lsIdx-1])?' (gleiche Aufnahme wie vorher)':'');
+  lsEl('lsQ').innerHTML='<span class="en">'+esc(item.q)+'</span>';
+  lsEl('lsOpts').innerHTML=item.a.map(function(o,i){return '<button data-i="'+i+'" class="en">'+esc(o)+'</button>';}).join('');
+  lsEl('lsExpl').className='expl';
+  lsEl('lsTransBox').style.display='none';lsEl('lsTransBox').open=false;
+  lsEl('lsNext').disabled=true;
+  renderPlayButton();
+}
+function answerListening(i){
+  const item=lsRound[lsIdx];
+  if(lsAnswers[lsIdx]!==undefined)return;
+  lsAnswers[lsIdx]=i;
+  lsEl('lsOpts').querySelectorAll('button').forEach(function(b,j){b.disabled=true;if(j===item.c)b.classList.add('correct');else if(j===i)b.classList.add('wrong');});
+  lsEl('lsExpl').className='expl show '+(i===item.c?'good':'badx');
+  lsEl('lsExpl').innerHTML=(i===item.c?'<strong>Richtig.</strong> ':'<strong>Falsch.</strong> ')+esc(item.e);
+  lsEl('lsTrans').innerHTML=item.task.script.map(function(s){return '<p class="en"><strong>'+LISTENING_LABELS[s.sp]+':</strong> '+esc(s.text)+'</p>';}).join('');
+  lsEl('lsTransBox').style.display='block';
+  lsEl('lsNext').disabled=false;
+}
+function finishListening(){
+  const s=scoreListening(lsRound,lsAnswers);
+  lsEl('lsArea').style.display='none';
+  lsEl('lsResult').style.display='block';
+  lsEl('lsResult').innerHTML='<h4>Ergebnis: '+s.correct+' von '+s.total+'</h4><ul class="clean" style="font-size:14px">'
+    +Object.keys(s.byPart).map(function(p){return '<li>Teil '+p+': '+s.byPart[p][0]+' von '+s.byPart[p][1]+'</li>';}).join('')+'</ul>';
+}
+function startListening(mode){
+  if(listeningEngine)listeningEngine.cancel();
+  lsRound=buildListeningRound(pickListening(mode));lsIdx=0;lsAnswers=[];lsLimiters={};
+  lsEl('lsResult').style.display='none';
+  lsEl('lsArea').style.display='block';
+  renderListeningItem();
+}
+lsEl('lsPlay').addEventListener('click',function(){
+  const item=lsRound[lsIdx],lim=lsLimiter(item);
+  lim.start();renderPlayButton();
+  listeningEngine.speak(item.task.script,{rate:parseFloat(lsEl('lsRate').value)}).then(function(){lim.finish();if(sameRecording(lsRound[lsIdx],item))renderPlayButton();});
+});
+lsEl('lsOpts').addEventListener('click',function(ev){const b=ev.target.closest('button[data-i]');if(b)answerListening(parseInt(b.dataset.i,10));});
+lsEl('lsNext').addEventListener('click',function(){
+  const cur=lsRound[lsIdx],nxt=lsRound[lsIdx+1];
+  if(listeningEngine&&!sameRecording(cur,nxt))listeningEngine.cancel();
+  lsIdx++;
+  if(lsIdx>=lsRound.length)finishListening();else renderListeningItem();
+});
+document.querySelectorAll('#p-listening [data-lsmode]').forEach(function(b){b.addEventListener('click',function(){startListening(b.dataset.lsmode);});});
+lsEl('lsAbort').addEventListener('click',function(){if(listeningEngine)listeningEngine.cancel();lsEl('lsArea').style.display='none';lsEl('lsResult').style.display='none';});
+showVoiceInfo();
+if(listeningEngine)listeningEngine.onVoicesChanged(showVoiceInfo);
 
 /* ============ Freier Speaking-Timer ============ */
 const topics=[

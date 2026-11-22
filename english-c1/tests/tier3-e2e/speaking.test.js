@@ -6,11 +6,7 @@ const { usePortalBrowser } = require('../lib/browser');
 
 const openPortal = usePortalBrowser();
 
-async function openSpeaking() {
-  const opened = await openPortal({ fakeClock: true });
-  await opened.page.click('button[data-panel="p-speaking"]');
-  return opened;
-}
+const openSpeaking = () => openPortal({ fakeClock: true, panel: 'p-speaking' });
 
 test('komplette Prüfung bis zur Selbstcheckliste durchklicken', async () => {
   const { page, errors } = await openSpeaking();

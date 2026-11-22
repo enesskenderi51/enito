@@ -3,10 +3,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPortal, toHost } = require('../lib/portal');
+const { nonEmpty } = require('../lib/assertions');
 
 const portal = loadPortal();
 const tasks = portal.get('speakingTasks');
-const nonEmpty = (s) => typeof s === 'string' && s.trim().length > 0;
 
 test('mindestens 8 Aufgaben pro Teil, IDs eindeutig', () => {
   const all = [...tasks.part1, ...tasks.part2, ...tasks.part3];

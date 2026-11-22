@@ -89,7 +89,15 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
   - `SPEAKING_TIMES` pro Etappentyp: photo 0/45, topic 60/120, present 60/90, followup 0/45
   - `buildSpeakingPlan(mode, picked)` erzeugt die Etappen, `SpeakingSession` ist die Zustandsmaschine
     (`idle`, `prep`, `speak`, `done`, Übergänge in `SPEAKING_TRANSITIONS`, Uhr von aussen über `tick`),
-    `ShuffleBag` verhindert Wiederholungen, `fmtClock` formatiert m:ss
+    `ShuffleBag` verhindert Wiederholungen (`take(n)` liefert n verschiedene, `bagsFor(pool)` einen Beutel pro Teil),
+    `fmtClock` formatiert m:ss
+- Listening (T-0003):
+  - `listeningTasks`: `{part1:[{id,title,script,q,a:[3],c,e}], part2:[{id,title,script,qs:[2]}], part3:[{id,title,script,items:[{s,c,e}] (4)]}`,
+    10 plus 6 plus 6 Aufnahmen, selbst erstellt. `script` = `[{sp:'f'|'m', text}]`. Teil 3: `c` 0 Mann, 1 Frau, 2 beide
+  - Stimme als Strategy: `{speak(script, opts) -> Promise, cancel(), describeVoices(), onVoicesChanged(cb)}`.
+    Standard `BrowserVoiceEngine` (Web Speech API). `rankVoices` bevorzugt Englisch, en-GB, neuronale Stimmen und das
+    passende Geschlecht. Externe Stimmen sind im Artifact gesperrt, eine andere Engine muss nur diese Schnittstelle erfüllen
+  - `PlayLimiter` (max 2 Durchgänge pro Aufnahme), `buildListeningRound`, `scoreListening`, `sameRecording`
 
 ### Lernlogik
 
@@ -144,13 +152,14 @@ Escaping-Falle in quoted Heredocs: `\'` einfach schreiben, nie `\\'`.
 |---|---|---|---|
 | `npm run test:t1` | 1 | Syntax, div Bilanz aller Tabs, reine Funktionen | unter 1 Sek. |
 | `npm run test:t2` | 2 | Datenintegrität aller Pools | unter 1 Sek. |
-| `npm run test:t3` | 3 | Playwright, alle Tabs ohne JavaScript Fehler, Speaking Trainer mit simulierter Uhr | rund 3 Sek. |
+| `npm run test:t3` | 3 | Playwright: alle Tabs, Speaking mit simulierter Uhr, Listening mit simulierter Sprachausgabe | rund 5 Sek. |
 | `npm test` | 1 und 2 | vor jedem Commit | |
 
 Der Loader `tests/lib/portal.js` führt den Scriptblock in `node:vm` aus. Pools und Funktionen
 holt man mit `loadPortal().get('grammarPool')`. Arrays aus dem vm Kontext vor `deepEqual` mit
 `toHost()` kopieren. Tier 3 Tests nutzen `usePortalBrowser()` aus `tests/lib/browser.js`
-(ein Browser pro Datei). Keine externen Pakete nötig.
+(ein Browser pro Datei, Optionen `panel`, `fakeClock`, `initScript`). Gemeinsame Prüfregeln für Fragen in
+`tests/lib/assertions.js` (`checkChoice`, `nonEmpty`). Keine externen Pakete nötig.
 
 **Manuelle Validierung (ersetzt durch die Tests oben, Reihenfolge bleibt gleich):**
 
@@ -165,7 +174,7 @@ Reading- und Matching-Arrays werden mit `json.dumps(..., ensure_ascii=False)` er
 
 1. **Speaking**: Trainer mit Prüfungszeiten, 24 Aufgaben, Vorlagen, Phrasenbank und Checkliste
    sind fertig (T-0002). Offen: Aufnahme im Browser und KI Feedback (T-0003)
-2. **Listening** hat Strategien, aber keine eigenen Übungsfragen
+2. **Listening**: Trainer mit 46 Fragen und Sprachausgabe fertig (T-0003). Offen: mehr Aufnahmen, Akzente
 3. Reading Teil 3 und 4: Nur Test I nutzt das offizielle Phrasenformat.
    Tests A bis H haben Einzelwort-Optionen, das ist eher Aptis General
 4. Rekonstruierte Inhalte (nicht aus dem Buch): Reading-Tests E bis H teilweise,

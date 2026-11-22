@@ -33,6 +33,15 @@ test('ShuffleBag zieht jeden Index genau einmal pro Runde', () => {
   }
 });
 
+test('ShuffleBag.take liefert n verschiedene Indizes, auch über eine Nachfüllung hinweg', () => {
+  const bag = new ShuffleBag(4);
+  for (let i = 0; i < 50; i++) {
+    const got = bag.take(3);
+    assert.equal(new Set(got).size, 3);
+  }
+  assert.equal(new ShuffleBag(2).take(5).length, 2);
+});
+
 test('ShuffleBag wiederholt beim Nachfüllen nie den letzten Index', () => {
   for (let s = 0; s < 200; s++) {
     const bag = new ShuffleBag(3);
