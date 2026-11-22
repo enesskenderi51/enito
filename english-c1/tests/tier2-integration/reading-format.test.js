@@ -35,8 +35,9 @@ test('Task 3 und 4 im Prüfungsformat: Phrasen, Lückenzahl, Nummern im Text', (
   }
 });
 
-test('neue Prüfungstasks verteilen die Lösung auf alle Positionen', () => {
-  const fresh = exam.filter((t) => task(t) >= 3 && letter(t) !== 'I');
-  const pos = new Set(fresh.flatMap((t) => t.qs.map((q) => q.c)));
-  assert.deepEqual(pos, new Set([0, 1, 2]));
+test('Task 3 und 4 jedes Tests verteilen die Lösung auf alle drei Positionen', () => {
+  for (const L of new Set(exam.map(letter))) {
+    const pos = new Set(exam.filter((t) => letter(t) === L && task(t) >= 3).flatMap((t) => t.qs.map((q) => q.c)));
+    assert.equal(pos.size, 3, `Test ${L}: Lösung nur an Position ${[...pos]}`);
+  }
 });

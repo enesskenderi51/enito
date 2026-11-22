@@ -67,8 +67,10 @@ KI Knöpfe funktionieren nur dort.
 | Vocabulary | 1011 Fragen (592 Collocation, 158 Word Pair, 146 Definition, 75 Usage, 40 Word Formation) |
 | Reading | 313 Fragen in 52 Tasks, 9 komplette Tests (A bis I), davon 16 Einzelwort Übungsvarianten |
 | Zuordnungen (Fragen 26 bis 30) | 420 Items in 84 Aufgaben |
+| Listening | 46 Fragen zu 22 Aufnahmen |
+| Speaking | 24 Aufgaben (keine Testfragen) |
 | Karteikarten | 187 C1-Wörter plus 56 Reading-Wörter |
-| **Gesamt** | **2304 Testfragen** |
+| **Gesamt** | **2438 Testfragen** |
 
 ### Datenstrukturen im Script
 
@@ -92,7 +94,7 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
   - `buildSpeakingPlan(mode, picked)` erzeugt die Etappen, `SpeakingSession` ist die Zustandsmaschine
     (`idle`, `prep`, `speak`, `done`, Übergänge in `SPEAKING_TRANSITIONS`, Uhr von aussen über `tick`),
     `ShuffleBag` verhindert Wiederholungen (`take(n)` liefert n verschiedene, `bagsFor(pool)` einen Beutel pro Teil),
-    `fmtClock` formatiert m:ss
+    `fmtClock` formatiert m:ss, alle Timer im Portal nutzen ihn (T-0006)
 - Listening (T-0003):
   - `listeningTasks`: `{part1:[{id,title,script,q,a:[3],c,e}], part2:[{id,title,script,qs:[2]}], part3:[{id,title,script,items:[{s,c,e}] (4)]}`,
     10 plus 6 plus 6 Aufnahmen, selbst erstellt. `script` = `[{sp:'f'|'m', text}]`. Teil 3: `c` 0 Mann, 1 Frau, 2 beide
@@ -124,8 +126,10 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
   Persistiert als `aptis-topics-v1`
 - **Fehlerdiagnose**: `diagnoseError()` mit 13 Mustern (would im if-Teil, Inversion ohne
   Hilfsverb, fehlendes have, Einzahl/Mehrzahl, few/little, mustn't-Falle und so weiter).
-  Dazu eine Anfängerbox pro Thema und ein KI-Knopf gegen `api.anthropic.com/v1/messages`
-  mit `claude-sonnet-4-6`
+  Dazu eine Anfängerbox pro Thema und ein KI-Knopf. Alle KI Knöpfe laufen über `askClaude(prompt, {maxTokens})`
+  (T-0006): Modelle aus `AI_MODELS` der Reihe nach (`claude-opus-5-5`, Rückfall `claude-sonnet-4-6`), nur Textblöcke,
+  `refusal` als Fehler mit `e.refusal`, das zuletzt erfolgreiche Modell wird zuerst probiert (`aiWorkingModel`).
+  Thinking ist beim aktuellen Modell immer aktiv und zählt in `max_tokens`
 
 ### Simulationsmodi
 
@@ -181,7 +185,7 @@ Reading- und Matching-Arrays werden mit `json.dumps(..., ensure_ascii=False)` er
 ## Bekannte Lücken und nächste Schritte
 
 1. **Speaking**: Trainer mit Prüfungszeiten, 24 Aufgaben, Vorlagen, Phrasenbank und Checkliste
-   sind fertig (T-0002). Offen: Aufnahme im Browser und KI Feedback (T-0003)
+   sind fertig (T-0002). Offen: Aufnahme im Browser und KI Feedback (noch kein Ticket)
 2. **Listening**: Trainer mit 46 Fragen und Sprachausgabe fertig (T-0003). Offen: mehr Aufnahmen, Akzente
 3. Reading Teil 3 und 4: alle neun kompletten Tests nutzen jetzt das Phrasenformat (T-0005).
    Die Buchvarianten mit Einzelwörtern bleiben als Einzelübung
