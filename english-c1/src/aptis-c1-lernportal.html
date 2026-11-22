@@ -4174,19 +4174,40 @@ footer{text-align:center;font-size:13px;color:var(--ink-soft);padding:30px 20px;
     <p style="font-size:13px;color:var(--ink-soft)">Trick: Für jedes Thema die gleiche Satzstruktur benutzen. Nur der Inhalt wechselt, das Gerüst sitzt.</p>
   </div>
 
-  <h3>Prüfungsmodus: kompletter Speaking-Test mit echten Zeiten</h3>
+  <h3>Speaking Trainer: alle drei Teile mit echten Zeiten</h3>
   <div class="card">
-    <p style="font-size:14px;margin-bottom:12px">Der Modus führt dich automatisch durch alle 3 Teile mit den Original-Zeiten. Sprich laut, nimm dich parallel mit dem Handy auf. Los geht es mit einem Klick.</p>
-    <div style="text-align:center"><button class="btn gold" id="mockStart">Speaking-Test starten</button> <button class="btn ghost" id="mockReset">Zurücksetzen</button></div>
-    <div id="mockArea" style="display:none;margin-top:16px">
-      <div class="mockstage">
-        <h5 id="mockPart">Teil 1</h5>
-        <div id="mockPrompt" style="font-size:15px"></div>
-        <div class="bigcount" id="mockCount">0:45</div>
-        <div style="text-align:center"><button class="btn" id="mockNext">Weiter</button></div>
+    <p style="font-size:14px;margin-bottom:12px">Der Trainer führt dich mit den Prüfungszeiten durch die Aufgaben. Die Vorbereitung geht automatisch ins Sprechen über, danach folgt die nächste Etappe. Sprich laut und nimm dich parallel mit dem Handy auf. Jede Aufgabe kommt erst wieder, wenn alle anderen des Teils dran waren. <em>Die Aufgaben sind selbst erstellt im Aptis Advanced Format, nicht aus dem Buch.</em></p>
+    <div style="text-align:center">
+      <button class="btn gold" data-spmode="full">Komplette Prüfung</button>
+      <button class="btn" data-spmode="part1">Nur Teil 1</button>
+      <button class="btn" data-spmode="part2">Nur Teil 2</button>
+      <button class="btn" data-spmode="part3">Nur Teil 3</button>
+      <button class="btn ghost" id="spAbort">Abbrechen</button>
+    </div>
+    <div id="spArea" style="display:none;margin-top:16px">
+      <div class="mockstage" id="spStage">
+        <h5 id="spPart"></h5>
+        <div class="timer-phase" id="spPhase"></div>
+        <div id="spPrompt" style="font-size:15px"></div>
+        <div class="bigcount" id="spCount">0:00</div>
+        <div style="text-align:center"><button class="btn" id="spNext">Weiter</button></div>
+        <details><summary>Aufbauvorlage für diesen Teil</summary><div id="spTpl" style="padding:0 14px 10px"></div></details>
+      </div>
+      <div id="spDone" style="display:none">
+        <h4>Geschafft. Hör dir jetzt deine Aufnahme an und hake ab, was geklappt hat:</h4>
+        <div id="spCheckDone"></div>
       </div>
     </div>
   </div>
+
+  <h3>Aufbauvorlagen pro Teil</h3>
+  <div class="grid2" id="spTemplates"></div>
+
+  <h3>C1 Phrasenbank</h3>
+  <div class="grid2" id="spPhrases"></div>
+
+  <h3>Selbstcheckliste nach den Aptis Kriterien</h3>
+  <div class="card" id="spChecklist"></div>
 
   <h3>Freier Timer und Themengenerator</h3>
   <div class="card timerbox">
@@ -5198,48 +5219,129 @@ document.querySelectorAll('[data-fb]').forEach(btn=>{
   });
 });
 
-/* ============ Speaking Prüfungsmodus ============ */
-const mockFlow=[
- {part:'Teil 1: Fotovergleich',prompt:'<strong>Stell dir zwei Fotos vor:</strong> Foto A zeigt ein volles Grossraumbuero mit vielen Menschen an Bildschirmen. Foto B zeigt eine Person allein am Kuechentisch im Homeoffice.<br><br><strong>Frage 1:</strong> Compare the two working environments. What are the main differences?',sec:45,phase:'Sprechen'},
- {part:'Teil 1: Fotovergleich',prompt:'<strong>Frage 2:</strong> Have you ever worked in an environment like one of these? Tell me about your experience.',sec:45,phase:'Sprechen'},
- {part:'Teil 1: Fotovergleich',prompt:'<strong>Frage 3:</strong> How do you think workplaces like these will change over the next ten years?',sec:45,phase:'Sprechen'},
- {part:'Teil 2: Abstraktes Thema',prompt:'<strong>Thema: Trust (Vertrauen)</strong><br>1. How important is trust in a professional relationship?<br>2. Describe a situation where trust was broken or built. What happened?<br>3. Do you think it is becoming harder to build trust in the digital age?<br><br><em>Jetzt: 1 Minute Notizen machen.</em>',sec:60,phase:'Vorbereitung'},
- {part:'Teil 2: Abstraktes Thema',prompt:'<strong>Sprich jetzt 2 Minuten und beantworte alle drei Fragen zum Thema Trust.</strong> Nutze Uebergaenge: Turning to the second question... / That brings me to the final point...',sec:120,phase:'Sprechen'},
- {part:'Teil 3: Präsentation',prompt:'<strong>Topic: Companies should switch their entire vehicle fleet to electric cars.</strong><br><br><strong>For:</strong> lower running costs / better company image / meets CO2 targets<br><strong>Against:</strong> high purchase price / charging infrastructure / limited range for field staff<br><br>Waehle ZWEI Punkte pro Seite. <em>Jetzt: 1 Minute vorbereiten.</em>',sec:60,phase:'Vorbereitung'},
- {part:'Teil 3: Präsentation',prompt:'<strong>Halte jetzt deine ausgewogene Praesentation (90 Sekunden).</strong><br>Geruest: There is an ongoing debate about whether... On the one hand... On the other hand... Taking everything into account...',sec:90,phase:'Sprechen'},
- {part:'Teil 3: Nachfrage (ohne Vorbereitung!)',prompt:'<strong>Follow-up question:</strong> How do you think company transport will change in the future? <em>Antworte sofort, 45 Sekunden.</em>',sec:45,phase:'Sprechen'}
-];
-let mockIdx=0,mockInt=null;
-const mockArea=document.getElementById('mockArea');
-function runMockStage(){
-  clearInterval(mockInt);
-  if(mockIdx>=mockFlow.length){
-    document.getElementById('mockPart').textContent='Fertig!';
-    document.getElementById('mockPrompt').innerHTML='Du hast den kompletten Speaking-Test durchlaufen. Hoere dir jetzt deine Handy-Aufnahme an und notiere: 2 Grammatikfehler, 2 Woerter, die du durch C1-Vokabular ersetzen koenntest, und ob du die Zeit gefuellt hast.';
-    document.getElementById('mockCount').textContent='';
-    document.getElementById('mockNext').textContent='Nochmals starten';
-    mockIdx=0;
-    return;
+/* ============ Speaking Trainer (T-0002) ============
+   Daten: unveränderliche Konstanten. Logik: reine Funktionen plus SpeakingSession
+   (Zustandsmaschine ohne Uhr). UI: dünne Schicht, die nur liest und setInterval besitzt. */
+const speakingTasks=Object.freeze({"part1": [{"id": "p1-office", "photos": ["A crowded open-plan office with dozens of people working at screens", "A person working alone at a kitchen table with a laptop and a cup of coffee"], "qs": ["Compare the two working environments. What are the advantages and drawbacks of each?", "Have you ever worked in an environment like one of these? Tell me about your experience.", "How do you think workplaces like these will change over the next ten years?"]}, {"id": "p1-travel", "photos": ["A family loading suitcases into a car for a road trip", "A business traveller rushing through a busy airport terminal"], "qs": ["Compare the two ways of travelling. What might each person be feeling?", "Tell me about a journey that did not go as planned.", "Do you think people will travel less in the future? Why or why not?"]}, {"id": "p1-learning", "photos": ["A university lecture hall full of students taking notes", "An adult learning a language with an app on a smartphone on a train"], "qs": ["Compare these two ways of learning. Which do you think is more effective, and why?", "Describe the last time you had to learn something new for your job.", "How might technology change the role of teachers in the coming decades?"]}, {"id": "p1-shopping", "photos": ["A busy outdoor farmers market with fresh vegetables", "A warehouse worker packing parcels for online orders"], "qs": ["Compare the two scenes. What do they tell us about the way people shop?", "How do you usually shop for groceries, and has that changed in recent years?", "What impact do you think online shopping will have on town centres in the long run?"]}, {"id": "p1-construction", "photos": ["Construction workers laying fibre optic cables in a trench on a city street", "An engineer checking a network map on a tablet in a quiet office"], "qs": ["Compare the two jobs shown. What skills does each require?", "Tell me about a project where outdoor work and office planning had to come together.", "How will infrastructure projects like these change the way people live and work?"]}, {"id": "p1-sport", "photos": ["A packed football stadium with cheering fans", "A lone runner on a mountain trail at sunrise"], "qs": ["Compare the two experiences of sport. Why might people choose one over the other?", "What role does exercise play in your own life?", "Do you think professional sport will become more or less important to society? Why?"]}, {"id": "p1-food", "photos": ["A family cooking a meal together in a small kitchen", "A delivery rider on a scooter carrying takeaway food at night"], "qs": ["Compare the two pictures. What do they suggest about modern eating habits?", "Tell me about a meal that is particularly important in your family or culture.", "How do you think our eating habits will develop over the next twenty years?"]}, {"id": "p1-meetings", "photos": ["A team gathered around a whiteboard in a meeting room", "A person on a video call with a grid of faces on the screen"], "qs": ["Compare these two types of meeting. Which is more productive, in your opinion?", "Describe a meeting you led or took part in that was particularly successful or difficult.", "Will face-to-face meetings still be necessary in the future? Why or why not?"]}], "part2": [{"id": "p2-trust", "theme": "Trust", "qs": ["How important is trust in a professional relationship?", "Describe a situation where trust was either built or broken. What happened?", "Do you think it is harder to build trust today than it was in the past?"]}, {"id": "p2-ambition", "theme": "Ambition", "qs": ["Is ambition always a positive quality?", "Tell me about a goal you worked hard to achieve.", "Can too much ambition be harmful to individuals or society?"]}, {"id": "p2-change", "theme": "Change", "qs": ["Why do many people find change difficult?", "Describe a significant change in your life and how you dealt with it.", "Should organisations change quickly or gradually? Why?"]}, {"id": "p2-responsibility", "theme": "Responsibility", "qs": ["What does it mean to take responsibility at work?", "Tell me about a time you had to take responsibility for a mistake.", "Are governments or individuals more responsible for protecting the environment?"]}, {"id": "p2-success", "theme": "Success", "qs": ["How would you define success?", "Describe a person you consider successful and explain why.", "Do you think society places too much emphasis on financial success?"]}, {"id": "p2-tradition", "theme": "Tradition", "qs": ["Why do people value traditions?", "Tell me about a tradition that is important to you.", "Should traditions be preserved even if they no longer fit modern life?"]}, {"id": "p2-failure", "theme": "Failure", "qs": ["What can people learn from failure?", "Describe a time when something you tried did not work out.", "Do schools and companies do enough to encourage people to take risks?"]}, {"id": "p2-privacy", "theme": "Privacy", "qs": ["Why is privacy important to people?", "Tell me about a situation where you felt your privacy was at risk.", "Is it acceptable for companies to collect personal data in exchange for free services?"]}], "part3": [{"id": "p3-ev", "topic": "Companies should switch their entire vehicle fleet to electric cars.", "pro": ["lower running costs", "better company image", "helps meet CO2 targets"], "con": ["high purchase price", "limited charging infrastructure", "range problems for field staff"], "followUp": "How do you think company transport will change in the future?"}, {"id": "p3-ai", "topic": "Artificial intelligence should replace humans in routine office work.", "pro": ["greater efficiency", "fewer human errors", "staff can focus on creative tasks"], "con": ["job losses", "over-reliance on technology", "ethical and data protection concerns"], "followUp": "Which jobs do you think will never be done by machines, and why?"}, {"id": "p3-fourday", "topic": "Employers should introduce a four-day working week.", "pro": ["higher productivity per hour", "better health and well-being", "more attractive to applicants"], "con": ["higher costs for businesses", "difficult in shift work", "reduced availability for customers"], "followUp": "What would you do with an extra free day every week?"}, {"id": "p3-remote", "topic": "Working from home should become the standard for office jobs.", "pro": ["no commuting time", "flexibility for families", "lower office costs"], "con": ["social isolation", "weaker team spirit", "blurred line between work and private life"], "followUp": "How has the way you work changed in the last five years?"}, {"id": "p3-social", "topic": "Social media use should be restricted for teenagers.", "pro": ["protects mental health", "less cyberbullying", "better sleep and concentration"], "con": ["limits personal freedom", "hard to enforce", "teenagers may feel socially excluded"], "followUp": "At what age do you think children should get their first smartphone?"}, {"id": "p3-cashless", "topic": "Our society should become completely cashless.", "pro": ["convenient and fast", "more hygienic", "less theft and tax evasion"], "con": ["excludes older people", "transaction fees", "loss of privacy"], "followUp": "How do you prefer to pay for things, and why?"}, {"id": "p3-tourism", "topic": "Popular cities should limit the number of tourists.", "pro": ["protects historic sites", "improves life for residents", "reduces pollution"], "con": ["loss of income for local businesses", "fewer jobs", "travel becomes a privilege of the rich"], "followUp": "How has tourism affected the place where you live?"}, {"id": "p3-languages", "topic": "Learning a foreign language at school is no longer necessary because of translation apps.", "pro": ["apps are instant and free", "more time for other subjects", "translation quality keeps improving"], "con": ["apps miss cultural nuance", "language learning trains the brain", "personal contact needs real language skills"], "followUp": "What has learning English meant for your own career?"}]});
+const speakingTemplates=Object.freeze([{"part": 1, "title": "Teil 1: Fotovergleich", "steps": ["Overview: Both pictures show... but in very different settings.", "Contrast: Whereas the first photo depicts..., the second one shows...", "Speculate: The person on the left appears to be... / I would imagine that...", "Evaluate: On balance, I think the first situation is more... because...", "Frage 2 (Erfahrung): Past Simple und Past Continuous, ein konkretes Beispiel", "Frage 3 (Zukunft): will, is likely to, I would expect... to, it may well be that..."]}, {"part": 2, "title": "Teil 2: Abstraktes Thema", "steps": ["Vorbereitung: pro Frage zwei Stichwörter plus ein persönliches Beispiel notieren", "Frage 1: Generally speaking, ... is crucial because...", "Übergang: Turning to the second question, ...", "Frage 2: I remember a situation when... What struck me was...", "Übergang: That brings me to the final point, ...", "Frage 3: Abwägen mit While it is true that..., I would argue that...", "Bis zum Ende sprechen: All things considered, ..."]}, {"part": 3, "title": "Teil 3: Präsentation und Nachfrage", "steps": ["Einleitung: There is an ongoing debate about whether...", "Dafür (2 Punkte): On the one hand, ... Moreover, ...", "Dagegen (2 Punkte): On the other hand, critics point out that... Another drawback is...", "Fazit: Taking everything into account, I believe that...", "Nachfrage ohne Vorbereitung: That is an interesting question. I would say that..."]}]);
+const speakingPhrases=Object.freeze([{"group": "Beschreiben und vergleichen", "items": ["Whereas the first picture shows..., the second one depicts...", "Both images have... in common.", "What strikes me most is the contrast between...", "In the foreground / background, we can see...", "Unlike the people in the first photo, ..."]}, {"group": "Spekulieren", "items": ["It looks as if / as though...", "The man appears to be...", "I would imagine that...", "They might well be...", "Judging by..., I would say that..."]}, {"group": "Meinung mit Nuance", "items": ["I am inclined to think that...", "To my mind, ...", "While I see the point of..., I would argue that...", "I could not agree more with the idea that...", "It is not as straightforward as it seems."]}, {"group": "Eigene Erfahrung", "items": ["I vividly remember a time when...", "What I took away from that experience was...", "Looking back, I realise that...", "In my line of work, ...", "This happened to me while I was..."]}, {"group": "Zukunft und Hypothese", "items": ["In the long run, ... is likely to...", "I would expect... to...", "If this trend continues, ...", "Had companies acted earlier, ... would have...", "It may well be that..."]}, {"group": "Struktur und Übergänge", "items": ["Turning to the second question, ...", "As for whether..., ...", "That brings me to my final point.", "On top of that, ...", "All things considered, ..."]}, {"group": "Zeit gewinnen", "items": ["That is an interesting question.", "Let me think about that for a second.", "I have never really thought about it, but...", "How shall I put it...", "Well, it depends on what you mean by..."]}, {"group": "Selbstkorrektur", "items": ["...or rather, what I mean is...", "Let me rephrase that.", "To put it another way, ...", "Sorry, I meant to say..."]}]);
+const speakingCriteria=Object.freeze([{"name": "Task Fulfilment", "checks": ["Alle Fragen beantwortet, keine ausgelassen", "Die volle Zeit genutzt, kein langes Schweigen", "In Teil 3 beide Seiten mit je zwei Punkten dargestellt"]}, {"name": "Grammatical Range and Accuracy", "checks": ["Vergangenheit, Gegenwart und Zukunft eingebaut", "Mindestens eine komplexe Struktur (Conditional, Passiv, Inversion, Relativsatz)", "Wenige Fehler, die das Verständnis stören"]}, {"name": "Vocabulary Range and Accuracy", "checks": ["good und bad durch präzisere Wörter ersetzt", "Kein Wort mehrmals hintereinander wiederholt", "Mindestens zwei Collocations oder C1 Wendungen benutzt"]}, {"name": "Pronunciation", "checks": ["Wortbetonung bei langen Wörtern korrekt", "Satzmelodie natürlich, nicht monoton"]}, {"name": "Fluency", "checks": ["Pausenfüller statt Schweigen", "Gleichmässiges Tempo, nicht zu schnell"]}, {"name": "Cohesion and Coherence", "checks": ["Klare Übergänge zwischen den Fragen", "Mindestens drei verschiedene Konnektoren", "Ein Fazit am Ende von Teil 2 und Teil 3"]}]);
+const SPEAKING_TIMES=Object.freeze({photo:{prep:0,speak:45},topic:{prep:60,speak:120},present:{prep:60,speak:90},followup:{prep:0,speak:45}});
+const SPEAKING_MODES=Object.freeze({full:[1,2,3],part1:[1],part2:[2],part3:[3]});
+
+function fmtClock(sec){const s=Math.max(0,sec|0);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+
+/* Mischbeutel: jede Aufgabe genau einmal pro Runde, beim Nachfüllen nie zweimal hintereinander dieselbe. */
+class ShuffleBag{
+  constructor(size){this.size=size;this.bag=[];this.last=-1;}
+  next(){
+    if(this.bag.length===0){
+      this.bag=fyShuffle([...Array(this.size).keys()]);
+      if(this.size>1&&this.bag[this.bag.length-1]===this.last)this.bag.unshift(this.bag.pop());
+    }
+    this.last=this.bag.pop();
+    return this.last;
   }
-  const st=mockFlow[mockIdx];
-  document.getElementById('mockPart').textContent=st.part+' · '+st.phase;
-  document.getElementById('mockPrompt').innerHTML=st.prompt;
-  document.getElementById('mockNext').textContent='Weiter';
-  const cd=document.getElementById('mockCount');
-  let sec=st.sec;
-  cd.className='bigcount';
-  function tick(){
-    const m=Math.floor(sec/60),s=sec%60;
-    cd.textContent=m+':'+(s<10?'0':'')+s;
-    if(sec<=10&&sec>0)cd.className='bigcount warn';
-    if(sec<=0){clearInterval(mockInt);cd.className='bigcount done';cd.textContent='0:00';}
-    sec--;
-  }
-  tick();mockInt=setInterval(tick,1000);
 }
-document.getElementById('mockStart').addEventListener('click',()=>{mockArea.style.display='block';mockIdx=0;runMockStage();});
-document.getElementById('mockNext').addEventListener('click',()=>{mockIdx++;runMockStage();});
-document.getElementById('mockReset').addEventListener('click',()=>{clearInterval(mockInt);mockArea.style.display='none';mockIdx=0;});
+
+function speakingStage(part,kind,task,question){const t=SPEAKING_TIMES[kind];return {part:part,kind:kind,task:task,question:question,prep:t.prep,speak:t.speak};}
+const SPEAKING_PARTS={
+  1:function(t){return t.qs.map(function(q,i){const st=speakingStage(1,'photo',t,q);st.showPhotos=i===0;return st;});},
+  2:function(t){return [speakingStage(2,'topic',t,null)];},
+  3:function(t){return [speakingStage(3,'present',t,null),speakingStage(3,'followup',t,t.followUp)];}
+};
+function buildSpeakingPlan(mode,picked){
+  const parts=SPEAKING_MODES[mode];
+  if(!parts)throw new Error('Unbekannter Speaking Modus: '+mode);
+  return parts.flatMap(function(p){return SPEAKING_PARTS[p](picked['part'+p]);});
+}
+
+/* Zustandsmaschine. Erlaubte Übergänge stehen in der Tabelle, alles andere wirft.
+   onChange(session, newStage) meldet jede Änderung, newStage ist true beim Betreten einer Etappe. */
+const SPEAKING_TRANSITIONS=Object.freeze({idle:['prep','speak'],prep:['speak','idle'],speak:['prep','speak','done','idle'],done:['idle']});
+class SpeakingSession{
+  constructor(stages,onChange){this.stages=stages;this.onChange=onChange;this.state='idle';this.index=0;this.remaining=0;}
+  get current(){return this.stages[this.index];}
+  go(state,remaining,newStage){
+    if(SPEAKING_TRANSITIONS[this.state].indexOf(state)<0)throw new Error('Übergang '+this.state+' nach '+state+' nicht erlaubt');
+    this.state=state;this.remaining=remaining;this.onChange(this,!!newStage);
+  }
+  enterStage(i){
+    if(i>=this.stages.length){this.go('done',0);return;}
+    this.index=i;
+    const st=this.stages[i];
+    if(st.prep>0)this.go('prep',st.prep,true);else this.go('speak',st.speak,true);
+  }
+  start(){this.enterStage(0);}
+  next(){
+    if(this.state==='prep')this.go('speak',this.current.speak);
+    else if(this.state==='speak')this.enterStage(this.index+1);
+    else throw new Error('Weiter ist im Zustand '+this.state+' nicht möglich');
+  }
+  tick(sec){
+    if(this.state!=='prep'&&this.state!=='speak')return;
+    this.remaining-=sec;
+    if(this.remaining<=0)this.next();else this.onChange(this,false);
+  }
+  abort(){if(this.state!=='idle')this.go('idle',0);}
+}
+
+/* ---- UI ---- */
+const speakingBags=Object.fromEntries(Object.keys(speakingTasks).map(function(k){return [k,new ShuffleBag(speakingTasks[k].length)];}));
+function pickSpeakingTasks(){return Object.fromEntries(Object.keys(speakingTasks).map(function(k){return [k,speakingTasks[k][speakingBags[k].next()]];}));}
+function speakingList(items){return '<ul class="clean" style="font-size:14px">'+items.map(function(x){return '<li class="en">'+esc(x)+'</li>';}).join('')+'</ul>';}
+const SPEAKING_PROMPTS={
+  photo:function(st){
+    return (st.showPhotos?'<p><strong>Foto A:</strong> '+esc(st.task.photos[0])+'<br><strong>Foto B:</strong> '+esc(st.task.photos[1])+'</p>':'')
+      +'<p class="en"><strong>'+esc(st.question)+'</strong></p>';
+  },
+  topic:function(st){return '<p><strong>Thema: '+esc(st.task.theme)+'</strong></p><ol style="font-size:15px;margin-left:20px">'+st.task.qs.map(function(q){return '<li class="en">'+esc(q)+'</li>';}).join('')+'</ol>';},
+  present:function(st){return '<p class="en"><strong>'+esc(st.task.topic)+'</strong></p><div class="grid2"><div><strong>For</strong>'+speakingList(st.task.pro)+'</div><div><strong>Against</strong>'+speakingList(st.task.con)+'</div></div><p style="font-size:13px">Wähle je zwei Punkte pro Seite.</p>';},
+  followup:function(st){return '<p class="en"><strong>Follow-up: '+esc(st.question)+'</strong></p><p style="font-size:13px">Ohne Vorbereitung, sofort antworten.</p>';}
+};
+const SPEAKING_LABELS={photo:'Teil 1: Fotovergleich',topic:'Teil 2: Abstraktes Thema',present:'Teil 3: Präsentation',followup:'Teil 3: Nachfrage'};
+function speakingChecklistHtml(){
+  return speakingCriteria.map(function(c){return '<h4>'+esc(c.name)+'</h4><ul class="checkbox-list">'+c.checks.map(function(x){return '<li><input type="checkbox"><span>'+esc(x)+'</span></li>';}).join('')+'</ul>';}).join('');
+}
+function speakingTemplateHtml(t){return '<h4>'+esc(t.title)+'</h4>'+speakingList(t.steps);}
+function renderSpeakingStatic(){
+  document.getElementById('spTemplates').innerHTML=speakingTemplates.map(function(t){return '<div class="card">'+speakingTemplateHtml(t)+'</div>';}).join('');
+  document.getElementById('spPhrases').innerHTML=speakingPhrases.map(function(g){return '<div class="card"><h4>'+esc(g.group)+'</h4>'+speakingList(g.items)+'</div>';}).join('');
+  document.getElementById('spChecklist').innerHTML=speakingChecklistHtml();
+}
+let speakingSession=null,speakingTimer=null;
+function renderSpeaking(s,newStage){
+  const done=s.state==='done';
+  document.getElementById('spStage').style.display=done?'none':'block';
+  document.getElementById('spDone').style.display=done?'block':'none';
+  if(done){document.getElementById('spCheckDone').innerHTML=speakingChecklistHtml();return;}
+  if(s.state==='idle')return;
+  const st=s.current;
+  if(newStage){
+    document.getElementById('spPart').textContent=SPEAKING_LABELS[st.kind]+' · Etappe '+(s.index+1)+' von '+s.stages.length;
+    document.getElementById('spPrompt').innerHTML=SPEAKING_PROMPTS[st.kind](st);
+    document.getElementById('spTpl').innerHTML=speakingTemplateHtml(speakingTemplates[st.part-1]);
+  }
+  document.getElementById('spPhase').textContent=s.state==='prep'?'Vorbereitung':'Sprechen';
+  const cd=document.getElementById('spCount');
+  cd.textContent=fmtClock(s.remaining);
+  cd.className='bigcount'+(s.remaining<=10?' warn':'');
+}
+function startSpeaking(mode){
+  clearInterval(speakingTimer);
+  speakingSession=new SpeakingSession(buildSpeakingPlan(mode,pickSpeakingTasks()),renderSpeaking);
+  document.getElementById('spArea').style.display='block';
+  speakingSession.start();
+  speakingTimer=setInterval(function(){speakingSession.tick(1);if(speakingSession.state==='done')clearInterval(speakingTimer);},1000);
+}
+document.querySelectorAll('#p-speaking [data-spmode]').forEach(function(b){b.addEventListener('click',function(){startSpeaking(b.dataset.spmode);});});
+document.getElementById('spNext').addEventListener('click',function(){if(speakingSession)speakingSession.next();});
+document.getElementById('spAbort').addEventListener('click',function(){
+  clearInterval(speakingTimer);
+  if(speakingSession)speakingSession.abort();
+  document.getElementById('spArea').style.display='none';
+});
+renderSpeakingStatic();
 
 /* ============ Freier Speaking-Timer ============ */
 const topics=[

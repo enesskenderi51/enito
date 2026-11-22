@@ -67,4 +67,7 @@ function loadPortal() {
   return cached;
 }
 
-module.exports = { HTML_PATH, readHtml, extractScript, panelIds, loadPortal };
+// Werte aus dem vm Kontext haben fremde Prototypen. Für deepStrictEqual in den Testprozess kopieren.
+const toHost = (value) => structuredClone(value);
+
+module.exports = { HTML_PATH, readHtml, extractScript, panelIds, loadPortal, toHost };

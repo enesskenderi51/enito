@@ -83,6 +83,13 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
 - `words`, `readingWords`: Karteikarten `{w,p,d,s,b}`
 - `meaningMap`, `bridgeMap`, `collocMap`: Lexika für die Fehlererklärungen
 - `topicSimple`, `topicGerman`, `topicMerk`, `grammarDeep`: Erklärtexte pro Grammatikthema
+- Speaking (T-0002), alle eingefroren:
+  - `speakingTasks`: `{part1:[{id,photos:[2],qs:[3]}], part2:[{id,theme,qs:[3]}], part3:[{id,topic,pro:[3],con:[3],followUp}]}`, je 8 Aufgaben, selbst erstellt
+  - `speakingTemplates` (pro Teil), `speakingPhrases` (`{group,items}`), `speakingCriteria` (`{name,checks}`, 6 Aptis Kriterien)
+  - `SPEAKING_TIMES` pro Etappentyp: photo 0/45, topic 60/120, present 60/90, followup 0/45
+  - `buildSpeakingPlan(mode, picked)` erzeugt die Etappen, `SpeakingSession` ist die Zustandsmaschine
+    (`idle`, `prep`, `speak`, `done`, Übergänge in `SPEAKING_TRANSITIONS`, Uhr von aussen über `tick`),
+    `ShuffleBag` verhindert Wiederholungen, `fmtClock` formatiert m:ss
 
 ### Lernlogik
 
@@ -137,11 +144,13 @@ Escaping-Falle in quoted Heredocs: `\'` einfach schreiben, nie `\\'`.
 |---|---|---|---|
 | `npm run test:t1` | 1 | Syntax, div Bilanz aller Tabs, reine Funktionen | unter 1 Sek. |
 | `npm run test:t2` | 2 | Datenintegrität aller Pools | unter 1 Sek. |
-| `npm run test:t3` | 3 | Playwright, alle Tabs ohne JavaScript Fehler | rund 2 Sek. |
+| `npm run test:t3` | 3 | Playwright, alle Tabs ohne JavaScript Fehler, Speaking Trainer mit simulierter Uhr | rund 3 Sek. |
 | `npm test` | 1 und 2 | vor jedem Commit | |
 
 Der Loader `tests/lib/portal.js` führt den Scriptblock in `node:vm` aus. Pools und Funktionen
-holt man mit `loadPortal().get('grammarPool')`. Keine externen Pakete nötig.
+holt man mit `loadPortal().get('grammarPool')`. Arrays aus dem vm Kontext vor `deepEqual` mit
+`toHost()` kopieren. Tier 3 Tests nutzen `usePortalBrowser()` aus `tests/lib/browser.js`
+(ein Browser pro Datei). Keine externen Pakete nötig.
 
 **Manuelle Validierung (ersetzt durch die Tests oben, Reihenfolge bleibt gleich):**
 
@@ -154,10 +163,8 @@ Reading- und Matching-Arrays werden mit `json.dumps(..., ensure_ascii=False)` er
 
 ## Bekannte Lücken und nächste Schritte
 
-1. **Speaking ausbauen.** Das ist die Priorität. Aktuell nur Grundlagen im Tab.
-   Gebraucht: Aufgaben mit echtem Timer für alle drei Teile (45 Sek., 2 Min. plus
-   1 Min. Vorbereitung, 1,5 Min. plus Nachfrage), Aufbauvorlagen, C1-Phrasenbank,
-   Selbstcheckliste nach den offiziellen Kriterien, idealerweise Aufnahme und KI-Feedback
+1. **Speaking**: Trainer mit Prüfungszeiten, 24 Aufgaben, Vorlagen, Phrasenbank und Checkliste
+   sind fertig (T-0002). Offen: Aufnahme im Browser und KI Feedback (T-0003)
 2. **Listening** hat Strategien, aber keine eigenen Übungsfragen
 3. Reading Teil 3 und 4: Nur Test I nutzt das offizielle Phrasenformat.
    Tests A bis H haben Einzelwort-Optionen, das ist eher Aptis General
