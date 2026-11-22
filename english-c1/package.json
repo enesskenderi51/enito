@@ -1,0 +1,11 @@
+{
+  "name": "aptis-c1-lernportal",
+  "private": true,
+  "description": "Tests für das Aptis C1 Lernportal (eine HTML Datei, kein Build)",
+  "scripts": {
+    "test": "npm run test:t1 && npm run test:t2",
+    "test:t1": "node --test 'tests/tier1-unit/*.test.js'",
+    "test:t2": "node --test 'tests/tier2-integration/*.test.js'",
+    "test:t3": "node --test 'tests/tier3-e2e/*.test.js'"
+  }
+}

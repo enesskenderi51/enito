@@ -51,9 +51,13 @@ Sicherheitsnetz für die Grauzone.
 ## Das Produkt
 
 `aptis-c1-lernportal.html`, eine einzige selbstständige HTML-Datei, rund 1,2 MB,
-kein Build, kein Server. Design petrol und safran. Acht Tabs:
+kein Build, kein Server. Design petrol und safran. Neun Tabs:
 
-`p-grammar`, `p-vocab`, `p-reading`, `p-listening`, `p-writing`, `p-speaking`, `p-sim`, `p-plan`
+`p-grammar`, `p-vocab`, `p-reading`, `p-listening`, `p-writing`, `p-speaking`, `p-sim`, `p-plan`, `p-info`
+
+Die Datei liegt unter `src/aptis-c1-lernportal.html`. Persistenz läuft über `window.storage`
+(Artifact Speicher von claude.ai). Ausserhalb von Claude speichert das Portal nichts, und die
+KI Knöpfe funktionieren nur dort.
 
 ### Inhalt (Stand heute, direkt aus der Datei ausgelesen)
 
@@ -127,7 +131,19 @@ h = h.replace(old, neu, 1)
 
 Escaping-Falle in quoted Heredocs: `\'` einfach schreiben, nie `\\'`.
 
-**Validierung nach jeder Änderung, immer in dieser Reihenfolge:**
+**Automatisierte Tests (T-0001), im Ordner `english-c1`:**
+
+| Befehl | Tier | Inhalt | Dauer |
+|---|---|---|---|
+| `npm run test:t1` | 1 | Syntax, div Bilanz aller Tabs, reine Funktionen | unter 1 Sek. |
+| `npm run test:t2` | 2 | Datenintegrität aller Pools | unter 1 Sek. |
+| `npm run test:t3` | 3 | Playwright, alle Tabs ohne JavaScript Fehler | rund 2 Sek. |
+| `npm test` | 1 und 2 | vor jedem Commit | |
+
+Der Loader `tests/lib/portal.js` führt den Scriptblock in `node:vm` aus. Pools und Funktionen
+holt man mit `loadPortal().get('grammarPool')`. Keine externen Pakete nötig.
+
+**Manuelle Validierung (ersetzt durch die Tests oben, Reihenfolge bleibt gleich):**
 
 1. Letzten `<script>`-Block per Regex extrahieren, in `check-N.js` schreiben, `node --check`
 2. Smoke-Test: Pools mit einem Klammer-Parser aus der Datei greifen und als `var` inlinen,
