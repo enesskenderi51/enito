@@ -109,3 +109,37 @@ test('BrowserVoiceEngine.cancel bricht ab und beendet das Promise', async () => 
   assert.equal(synth.spoken.length, 2); // erster Satz plus cancel
   assert.equal(synth.spoken[1], 'cancel');
 });
+
+test('rankVoices bevorzugt die Stimme des gewünschten Akzents, sonst eine andere englische', () => {
+  const voices = [V('Google UK English Female', 'en-GB'), V('Samantha', 'en-US'), V('Karen', 'en-AU'), V('Moira', 'en_IE')];
+  assert.equal(toHost(rankVoices(voices, 'f', 'en-AU'))[0].name, 'Karen');
+  assert.equal(toHost(rankVoices(voices, 'f', 'en-IE'))[0].name, 'Moira');
+  assert.equal(toHost(rankVoices(voices, 'f'))[0].name, 'Google UK English Female');
+  assert.ok(toHost(rankVoices(voices, 'f', 'en-IN')).length === 4, 'Rückfall auf alle englischen Stimmen');
+  assert.equal(pickVoicePair(voices, 'en-US').f.name, 'Samantha');
+});
+
+test('BrowserVoiceEngine spricht mit der Stimme des Akzents', async () => {
+  const synth = fakeSynth();
+  synth.getVoices = () => [V('Google UK English Female', 'en-GB'), V('Samantha', 'en-US')];
+  const engine = new BrowserVoiceEngine(synth, FakeUtterance);
+  await engine.speak([{ sp: 'f', text: 'Hi.' }], { lang: 'en-US' });
+  assert.deepEqual([synth.spoken[0].voice.name, synth.spoken[0].lang], ['Samantha', 'en-US']);
+  assert.equal(engine.describeVoices('en-US').f.name, 'Samantha');
+});
+
+test('Akzentstimmen echter Geräte werden dem richtigen Geschlecht zugeordnet', () => {
+  const voices = [V('Google UK English Male', 'en-GB'), V('Rishi', 'en-IN'), V('Lee', 'en-AU')];
+  assert.equal(toHost(rankVoices(voices, 'm', 'en-IN'))[0].name, 'Rishi');
+  assert.equal(toHost(rankVoices(voices, 'm', 'en-AU'))[0].name, 'Lee');
+});
+
+test('Namen zählen nur als ganze Wörter, hasVoiceFor erkennt fehlende Akzente', () => {
+  const voices = [V('Alexandra', 'en-US'), V('Google US English Male', 'en-US')];
+  assert.equal(toHost(rankVoices(voices, 'm', 'en-US'))[0].name, 'Google US English Male');
+  const synth = fakeSynth();
+  synth.getVoices = () => [V('Samantha', 'en-US'), V('Google UK English Male', 'en-GB')];
+  const engine = new BrowserVoiceEngine(synth, FakeUtterance);
+  assert.equal(engine.hasVoiceFor('en-US'), true);
+  assert.equal(engine.hasVoiceFor('en-IN'), false);
+});

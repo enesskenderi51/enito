@@ -56,3 +56,12 @@ test('Teil 3 nutzt alle drei Zuordnungen, damit Raten nicht hilft', () => {
   const used = new Set(tasks.part3.flatMap((t) => t.items.map((i) => i.c)));
   assert.deepEqual(used, new Set([0, 1, 2]));
 });
+
+test('Akzente: gültig, mit Anzeige und mindestens vier verschiedene im Pool', () => {
+  const labels = portal.get('ACCENT_LABELS');
+  const accentOf = portal.get('taskAccent');
+  const all = [...tasks.part1, ...tasks.part2, ...tasks.part3];
+  for (const t of all) assert.ok(labels[accentOf(t)], `${t.id}: Akzent ${t.accent}`);
+  assert.ok(new Set(all.map(accentOf)).size >= 4);
+  assert.ok(tasks.part1.length >= 16 && tasks.part2.length >= 9 && tasks.part3.length >= 9);
+});

@@ -67,11 +67,11 @@ KI Knöpfe funktionieren nur dort.
 | Vocabulary | 1011 Fragen (592 Collocation, 158 Word Pair, 146 Definition, 75 Usage, 40 Word Formation) |
 | Reading | 313 Fragen in 52 Tasks, 9 komplette Tests (A bis I), davon 16 Einzelwort Übungsvarianten |
 | Zuordnungen (Fragen 26 bis 30) | 420 Items in 84 Aufgaben |
-| Listening | 46 Fragen zu 22 Aufnahmen |
+| Listening | 76 Fragen zu 34 Aufnahmen, 5 Akzente |
 | Speaking | 24 Aufgaben (keine Testfragen) |
 | Writing | 5 komplette Tests mit 25 Musterantworten |
 | Karteikarten | 187 C1-Wörter plus 56 Reading-Wörter |
-| **Gesamt** | **2438 Testfragen** |
+| **Gesamt** | **2468 Testfragen** |
 
 ### Datenstrukturen im Script
 
@@ -104,10 +104,11 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
   (`speakingFeedbackPrompt`), Aussprache ist aus Text nicht bewertbar. `tick` meldet jetzt auch Restzeit 0
 - Listening (T-0003):
   - `listeningTasks`: `{part1:[{id,title,script,q,a:[3],c,e}], part2:[{id,title,script,qs:[2]}], part3:[{id,title,script,items:[{s,c,e}] (4)]}`,
-    10 plus 6 plus 6 Aufnahmen, selbst erstellt. `script` = `[{sp:'f'|'m', text}]`. Teil 3: `c` 0 Mann, 1 Frau, 2 beide
-  - Stimme als Strategy: `{speak(script, opts) -> Promise, cancel(), describeVoices(), onVoicesChanged(cb)}`.
-    Standard `BrowserVoiceEngine` (Web Speech API). `rankVoices` bevorzugt Englisch, en-GB, neuronale Stimmen und das
-    passende Geschlecht. Externe Stimmen sind im Artifact gesperrt, eine andere Engine muss nur diese Schnittstelle erfüllen
+    16 plus 9 plus 9 Aufnahmen, selbst erstellt. `script` = `[{sp:'f'|'m', text}]`. Teil 3: `c` 0 Mann, 1 Frau, 2 beide.
+    Optional `accent` (`en-GB` Standard, `en-US`, `en-AU`, `en-IE`, `en-IN`, Anzeige über `ACCENT_LABELS`, T-0010)
+  - Stimme als Strategy: `{speak(script, {rate, lang}) -> Promise, cancel(), describeVoices(lang), hasVoiceFor(lang), onVoicesChanged(cb)}`.
+    Standard `BrowserVoiceEngine` (Web Speech API). `rankVoices(voices, gender, lang)` gewichtet Geschlecht (±10) vor
+    Akzent (+7) vor Qualität der Stimme (bis +6), Namen zählen nur als ganze Wörter. Externe Stimmen sind im Artifact gesperrt, eine andere Engine muss nur diese Schnittstelle erfüllen
   - `PlayLimiter` (max 2 Durchgänge pro Aufnahme), `buildListeningRound`, `scoreListening`, `sameRecording`
 - Core Diagnose (T-0004), Karte `#coreDiag` im Plan Tab:
   - Historie der Runden `core` und `exam` in `aptis-core-history-v1` (`[{date,mode,points}]`, max 30), `recordCoreRun` in `simFinish`
@@ -201,7 +202,7 @@ Reading- und Matching-Arrays werden mit `json.dumps(..., ensure_ascii=False)` er
 1. **Speaking**: Trainer mit Prüfungszeiten, 24 Aufgaben, Vorlagen, Phrasenbank und Checkliste
    sind fertig (T-0002). Aufnahme, Transkript und KI Feedback pro Antwort (T-0008). In Claude prüfen, ob das
    Artifact Mikrofon und Spracherkennung freigibt, sonst Transkript selbst einfügen
-2. **Listening**: Trainer mit 46 Fragen und Sprachausgabe fertig (T-0003). Offen: mehr Aufnahmen, Akzente
+2. **Listening**: Trainer mit Sprachausgabe (T-0003), 34 Aufnahmen mit 5 Akzenten (T-0010)
 3. Reading Teil 3 und 4: alle neun kompletten Tests nutzen jetzt das Phrasenformat (T-0005).
    Die Buchvarianten mit Einzelwörtern bleiben als Einzelübung
 4. Rekonstruierte Inhalte (nicht aus dem Buch): Reading-Tests E bis H teilweise,
