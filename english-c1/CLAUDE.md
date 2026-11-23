@@ -96,6 +96,8 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
     (`idle`, `prep`, `speak`, `done`, Übergänge in `SPEAKING_TRANSITIONS`, Uhr von aussen über `tick`),
     `ShuffleBag` verhindert Wiederholungen (`take(n)` liefert n verschiedene, `bagsFor(pool)` einen Beutel pro Teil),
     `fmtClock` formatiert m:ss, alle Timer im Portal nutzen ihn (T-0006)
+- `Countdown(el, {base, warnAt, onDone}, scheduler)` (T-0009): einfacher Countdown mit `start`, `stop`, `reset(text)`,
+  genutzt von Writing Timer, freiem Speaking Timer und Simulation. Taktgeber injizierbar für Tests
 - Speaking Aufnahme (T-0008): `SpeakingCapture` beobachtet die `SpeakingSession` und nimmt jede Sprechphase auf.
   Adapter `MediaRecorderAdapter` (Aufnahme, `release()` gibt das Mikrofon frei) und `SpeechTranscriberAdapter`
   (Web Speech API, en-GB), `NULL_CAPTURE` ohne Unterstützung. Die KI bekommt nur das Transkript

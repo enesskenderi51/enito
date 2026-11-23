@@ -5160,22 +5160,32 @@ document.querySelectorAll('textarea[data-part]').forEach(ta=>{
   });
 });
 
-/* ============ Writing-Timer 45 Min ============ */
-let wInt=null;
-const wT=document.getElementById('wTimer');
-document.getElementById('wStart').addEventListener('click',()=>{
-  clearInterval(wInt);
-  let sec=45*60;
-  wT.className='timer-display';
-  function tick(){
-    wT.textContent=fmtClock(sec);
-    if(sec<=300)wT.className='timer-display warn';
-    if(sec<=0){clearInterval(wInt);wT.className='timer-display done';wT.textContent='0:00';}
-    sec--;
+/* ============ Countdown (T-0009) ============
+   Ein Countdown für Writing, freien Speaking Timer und Simulation. Taktgeber injizierbar für Tests. */
+const REAL_SCHEDULER=Object.freeze({set:function(fn){return setInterval(fn,1000);},clear:function(id){clearInterval(id);}});
+class Countdown{
+  constructor(el,{base,warnAt,onDone},scheduler){this.el=el;this.base=base;this.warnAt=warnAt;this.onDone=onDone;this.scheduler=scheduler||REAL_SCHEDULER;this.id=null;this.sec=0;}
+  start(sec){
+    this.stop();this.sec=sec;this.render();
+    const self=this;this.id=this.scheduler.set(function(){self.tick();});
   }
-  tick();wInt=setInterval(tick,1000);
-});
-document.getElementById('wStop').addEventListener('click',()=>{clearInterval(wInt);wT.className='timer-display';wT.textContent='45:00';});
+  tick(){
+    this.sec=Math.max(0,this.sec-1);this.render();
+    if(this.sec===0){this.stop();if(this.onDone)this.onDone();}
+  }
+  stop(){if(this.id!==null){this.scheduler.clear(this.id);this.id=null;}}
+  reset(text){this.stop();this.el.className=this.base;this.el.textContent=text;}
+  render(){
+    this.el.textContent=fmtClock(this.sec);
+    this.el.className=this.base+(this.sec===0?' done':this.sec<=this.warnAt?' warn':'');
+  }
+}
+
+/* ============ Writing-Timer 45 Min ============ */
+const wT=document.getElementById('wTimer');
+const writingCountdown=new Countdown(wT,{base:'timer-display',warnAt:300});
+document.getElementById('wStart').addEventListener('click',()=>writingCountdown.start(45*60));
+document.getElementById('wStop').addEventListener('click',()=>writingCountdown.reset('45:00'));
 
 /* ============ Musterantworten toggeln ============ */
 function setModelVisible(btn,shown){
@@ -5750,28 +5760,20 @@ const topics=[
  'Presentation: Should social media be restricted for teenagers? Two points for, two against.',
  'Abstract topic: Ambition. Is it always a positive quality? Can too much ambition be harmful? How has your own ambition changed over time?'
 ];
-let timerInt=null;
+
 const tDisp=document.getElementById('timerDisplay'),tPhase=document.getElementById('timerPhase');
+const freeCountdown=new Countdown(tDisp,{base:'timer-display',warnAt:10,onDone:function(){tPhase.textContent='Zeit abgelaufen!';}});
 document.getElementById('newTopic').addEventListener('click',()=>{
   document.getElementById('topicText').textContent=topics[Math.floor(Math.random()*topics.length)];
 });
 document.querySelectorAll('#p-speaking [data-timer]').forEach(b=>{
   b.addEventListener('click',()=>{
-    clearInterval(timerInt);
-    let sec=parseInt(b.dataset.timer,10);
     tPhase.textContent=b.dataset.phase;
-    tDisp.className='timer-display';
-    function tick(){
-      tDisp.textContent=fmtClock(sec);
-      if(sec<=10&&sec>0)tDisp.className='timer-display warn';
-      if(sec<=0){clearInterval(timerInt);tDisp.className='timer-display done';tDisp.textContent='0:00';tPhase.textContent='Zeit abgelaufen!';}
-      sec--;
-    }
-    tick();timerInt=setInterval(tick,1000);
+    freeCountdown.start(parseInt(b.dataset.timer,10));
   });
 });
 document.getElementById('timerStop').addEventListener('click',()=>{
-  clearInterval(timerInt);tPhase.textContent='Bereit';tDisp.className='timer-display';tDisp.textContent='0:00';
+  freeCountdown.reset('0:00');tPhase.textContent='Bereit';
 });
 
 /* ============ Core-Test-Simulation: 2 Modi, grosser Fragenpool, Fehler-Review ============ */
@@ -7098,10 +7100,11 @@ let lastTopic=null;
 let readingSec=480,readingStart='8:00';
 function goTopic(i){lastTopic=topicDefs[i];var b=document.querySelector('#navBar button[data-panel="p-sim"]');if(b)b.click();startSim('topic');}
 function goSim(m){var b=document.querySelector('#navBar button[data-panel="p-sim"]');if(b)b.click();startSim(m);}
-let simInt=null,simIdx=0,simScore=0,simQs=[],simMode='mixed',simWrong=[];
+let simIdx=0,simScore=0,simQs=[],simMode='mixed',simWrong=[];
 const simArea=document.getElementById('simArea'),simTimerEl=document.getElementById('simTimer'),simStatus=document.getElementById('simStatus');
+const simCountdown=new Countdown(simTimerEl,{base:'sim-timer',warnAt:60,onDone:function(){simFinish(true);}});
 function startSim(mode){
-  clearInterval(simInt);
+  simCountdown.stop();
   simMode=mode;simWrong=[];sessionTopic={};
   if(mode==='readingfull'){
     simQs=buildFullReading();
@@ -7140,14 +7143,7 @@ function startSim(mode){
   simIdx=0;simScore=0;
   simStatus.textContent=(mode==='readingfull'?('Kompletter Reading-Test '+fullReadingLabel+': 4 Teile, 25 Items, 60 Minuten'):(mode==='matchexam'?'Zuordnungs-Prüfung: 10 Aufgaben mit 50 Items, Auswertung am Schluss':(mode==='exam'?'Prüfungsmodus: 50 Items in 25 Minuten, keine Zwischenlösungen, Auswertung am Schluss':(mode==='retry'?'Fehler-Wiederholung mit Erklärungen':(mode==='core'?'Core-Test läuft: 25 Grammatikfragen und 5 Zuordnungen in 25 Minuten':(mode==='match'?'Zuordnungs-Modus läuft: 5 Aufgaben mit je 5 Zuordnungen':(mode==='reading'?'Reading-Modus läuft: ein Text, alle Fragen dazu':(mode==='topic'&&lastTopic?'Themen-Test: '+lastTopic.label+' läuft (10 Fragen)':(partCfg[mode]?partCfg[mode].label+' läuft ('+partCfg[mode].n+' Fragen, jede Runde neu gemischt)':(mode==='vocab'?'Vocabulary-Modus läuft':(mode==='grammar'?'Grammar-Modus läuft':'Gemischter Modus läuft')))))))))));
   let sec=(mode==='readingfull'?3600:(mode==='matchexam'?1500:(mode==='exam'?1500:(mode==='retry'?900:(mode==='core'?1500:(mode==='match'?600:(mode==='reading'?readingSec:(mode==='topic'?300:(partCfg[mode]?partCfg[mode].sec:(mode==='vocab'?780:(mode==='grammar'?720:600)))))))))));
-  simTimerEl.className='sim-timer';
-  function tick(){
-    simTimerEl.textContent=fmtClock(sec);
-    if(sec<=60)simTimerEl.className='sim-timer warn';
-    if(sec<=0){clearInterval(simInt);simFinish(true);}
-    sec--;
-  }
-  tick();simInt=setInterval(tick,1000);
+  simCountdown.start(sec);
   simRender();
 }
 document.getElementById('simStartMixed').addEventListener('click',()=>startSim('mixed'));
@@ -7631,7 +7627,7 @@ function downloadSheet(){
 }
 function closeSheet(){const b=document.getElementById('seriesReport');b.style.display='none';b.innerHTML='';}
 function simFinish(timeout){
-  clearInterval(simInt);
+  simCountdown.stop();
   if(simMode==='exam'||simMode==='matchexam'||simMode==='readingfull')evaluateExam();
   const seriesActive=seriesAfterRound();
   saveMastery();updateMasteryInfo();saveTopicStats();updateTopicInfo();
