@@ -4074,74 +4074,61 @@ footer{text-align:center;font-size:13px;color:var(--ink-soft);padding:30px 20px;
     </div>
   </div>
 
+  <div class="card" id="wSetBar" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+    <div><strong id="wSetTitle"></strong><br><span style="font-size:13px;color:var(--ink-soft)">Test 1 stammt aus dem bisherigen Tab, Test 2 bis 5 sind selbst erstellt im Aptis Advanced Format.</span></div>
+    <div><select id="wSetSel"></select> <button class="btn" id="wNewSet">Neuer Test</button></div>
+  </div>
+
   <!-- Task 1 -->
   <div class="wtask">
     <h4>Teil 1: Chat (3 Antworten, je 30 bis 40 Wörter, ca. 10 Minuten)</h4>
-    <div class="prompt"><em>You have joined an international network for project professionals. You are talking to three members in the chat room. Answer each message using 30 to 40 words.</em><br><br>
-    <strong>Laura:</strong> Hi, welcome to the network! What kind of projects do you usually manage, and what do you enjoy most about your work?<br>
-    <strong>Marco:</strong> Nice to meet you! What has been the most challenging situation in your career so far, and how did you handle it?<br>
-    <strong>Aisha:</strong> Welcome! How do you keep your team motivated when deadlines get tight?</div>
-    <label style="font-size:13px;font-weight:600">Antwort an Laura:</label>
-    <textarea id="w1a" data-min="30" data-max="40" placeholder="30 bis 40 Wörter, informell..."></textarea>
-    <div class="wc"><span id="w1a-wc">0 Wörter</span><span>Ziel: 30 bis 40</span></div>
-    <label style="font-size:13px;font-weight:600;display:block;margin-top:12px">Antwort an Marco:</label>
-    <textarea id="w1b" data-min="30" data-max="40" placeholder="30 bis 40 Wörter, informell..."></textarea>
-    <div class="wc"><span id="w1b-wc">0 Wörter</span><span>Ziel: 30 bis 40</span></div>
-    <label style="font-size:13px;font-weight:600;display:block;margin-top:12px">Antwort an Aisha:</label>
-    <textarea id="w1c" data-min="30" data-max="40" placeholder="30 bis 40 Wörter, informell..."></textarea>
-    <div class="wc"><span id="w1c-wc">0 Wörter</span><span>Ziel: 30 bis 40</span></div>
+    <div class="prompt" id="wP1"></div>
+    <label style="font-size:13px;font-weight:600">Antwort an <span class="wname"></span>:</label>
+    <textarea id="w1a" data-part="1" placeholder="informell..."></textarea>
+    <div class="wc"><span id="w1a-wc">0 Wörter</span><span class="wgoal"></span></div>
+    <label style="font-size:13px;font-weight:600;display:block;margin-top:12px">Antwort an <span class="wname"></span>:</label>
+    <textarea id="w1b" data-part="1" placeholder="informell..."></textarea>
+    <div class="wc"><span id="w1b-wc">0 Wörter</span><span class="wgoal"></span></div>
+    <label style="font-size:13px;font-weight:600;display:block;margin-top:12px">Antwort an <span class="wname"></span>:</label>
+    <textarea id="w1c" data-part="1" placeholder="informell..."></textarea>
+    <div class="wc"><span id="w1c-wc">0 Wörter</span><span class="wgoal"></span></div>
     <div class="qnav">
       <button class="btn gold" data-fb="1">KI-Korrektur für Teil 1</button>
       <button class="btn ghost" data-model="m1">Musterantwort zeigen</button>
     </div>
     <div class="spin" id="spin1">Analysiere deinen Text nach den Aptis-Kriterien...</div>
     <div class="feedback-out" id="fb1"></div>
-    <div class="model" id="m1">
-      <h5>Musterantwort (an Laura, 37 Wörter)</h5>
-      <p class="en">Thanks Laura! I mainly manage infrastructure rollout projects across several regions, which means juggling lots of partners at once. What I enjoy most is seeing a plan on paper turn into something real. How about you?</p>
-      <p style="margin-top:8px;font-size:13px">Merkmale: Kurzformen, konkretes Detail, natürliche Wendung (juggling lots of partners), Gegenfrage.</p>
-    </div>
+    <div class="model" id="m1"></div>
   </div>
 
   <!-- Task 2 -->
   <div class="wtask">
     <h4>Teil 2: Formelle E-Mail (120 bis 150 Wörter, ca. 15 Minuten)</h4>
-    <div class="prompt"><em>You receive this email from your local council:</em><br><br>
-    "Dear resident, we are writing to inform you that, due to major construction work, the main access road to your neighbourhood will be closed for six months starting next month. The temporary route will add approximately 25 minutes to journeys in each direction. We apologise for any inconvenience caused. The City Council."<br><br>
-    <em>Write an email to the council (120 to 150 words). Use these notes: say how you feel about the situation, explain the impact on your daily life, and make two suggestions.</em></div>
-    <textarea id="w2" data-min="120" data-max="150" style="min-height:220px" placeholder="Dear Sir or Madam, ..."></textarea>
-    <div class="wc"><span id="w2-wc">0 Wörter</span><span>Ziel: 120 bis 150</span></div>
+    <div class="prompt" id="wP2"></div>
+    <textarea id="w2" data-part="2" style="min-height:220px" placeholder="Dear Sir or Madam, ..."></textarea>
+    <div class="wc"><span id="w2-wc">0 Wörter</span><span class="wgoal"></span></div>
     <div class="qnav">
       <button class="btn gold" data-fb="2">KI-Korrektur für Teil 2</button>
       <button class="btn ghost" data-model="m2">Musterantwort zeigen</button>
     </div>
     <div class="spin" id="spin2">Analysiere deinen Text nach den Aptis-Kriterien...</div>
     <div class="feedback-out" id="fb2"></div>
-    <div class="model" id="m2">
-      <h5>Musterantwort (144 Wörter)</h5>
-      <p class="en">Dear Sir or Madam,<br><br>I am writing in response to your email concerning the six-month closure of the main access road. I must express my frustration at this announcement, particularly given how little notice residents have received.<br><br>The impact on my daily life would be considerable. An additional 50 minutes of travelling per day would mean leaving home before my child wakes up and returning after dinner, which I find unacceptable over such a long period.<br><br>I would therefore like to make two suggestions. Firstly, the council could carry out the most disruptive work at night or during weekends, keeping the road partially open on weekdays. Secondly, a temporary shuttle service between the neighbourhood and the nearest station would ease the burden on commuters.<br><br>I would be grateful if these options could be considered.<br><br>Yours faithfully,<br>Enes</p>
-      <p style="margin-top:8px;font-size:13px">Merkmale: Gefühl klar benannt (frustration), Auswirkung konkret gerechnet, zwei nummerierte Vorschläge (Firstly, Secondly), durchgehend formell, Yours faithfully weil Name unbekannt.</p>
-    </div>
+    <div class="model" id="m2"></div>
   </div>
 
   <!-- Task 3 -->
   <div class="wtask">
     <h4>Teil 3: Artikel (180 bis 220 Wörter, ca. 20 Minuten)</h4>
-    <div class="prompt"><em>"Modern Life Weekly" is a website that accepts short articles from members of the public. You have been asked to contribute an article on the subject of "Cashless payments". You have done some research. Use the notes to write an article that is both informative and interesting (180 to 220 words):</em><br><br>
-    Research notes: 2015: 18 percent of payments cashless · 2025: 61 percent · average time saved per transaction: 12 seconds · 27 percent of older residents feel excluded · card fees for small shops: up to 2 percent per sale · advantages: convenience, hygiene, less theft · disadvantages: exclusion, fees, data privacy</div>
-    <textarea id="w3" data-min="180" data-max="220" style="min-height:260px" placeholder="Titel plus Artikel..."></textarea>
-    <div class="wc"><span id="w3-wc">0 Wörter</span><span>Ziel: 180 bis 220</span></div>
+    <div class="prompt" id="wP3"></div>
+    <textarea id="w3" data-part="3" style="min-height:260px" placeholder="Titel plus Artikel..."></textarea>
+    <div class="wc"><span id="w3-wc">0 Wörter</span><span class="wgoal"></span></div>
     <div class="qnav">
       <button class="btn gold" data-fb="3">KI-Korrektur für Teil 3</button>
       <button class="btn ghost" data-model="m3">Musterantwort zeigen</button>
     </div>
     <div class="spin" id="spin3">Analysiere deinen Text nach den Aptis-Kriterien...</div>
     <div class="feedback-out" id="fb3"></div>
-    <div class="model" id="m3">
-      <h5>Musterantwort (209 Wörter)</h5>
-      <p class="en"><strong>A World Without Wallets?</strong><br><br>When did you last pay for your coffee in cash? If you cannot remember, you are far from alone. Whereas cashless payments accounted for a mere 18 percent of transactions in 2015, that figure had soared to 61 percent by 2025, and the trend shows no sign of slowing down.<br><br>The appeal is obvious. Tapping a card or phone saves an average of 12 seconds per transaction, queues move faster, and shopkeepers no longer worry about theft or handling coins. Moreover, many customers appreciate the added hygiene of contactless payment.<br><br>Nevertheless, the shift has a darker side. A striking 27 percent of older residents report feeling excluded from everyday services, while small shops face card fees of up to 2 percent per sale, costs which they can rarely afford to absorb. There are also growing concerns about data privacy, since every digital payment leaves a trace.<br><br>Taking everything into account, the convenience of a cashless society is undeniable, yet it must not come at the price of excluding the vulnerable. The challenge for the coming years will be finding a system that combines digital speed with the freedom that only cash can guarantee.</p>
-      <p style="margin-top:8px;font-size:13px">Merkmale: Titel als Frage, direkter Leser-Einstieg, ALLE Zahlen verarbeitet, C1-Konnektoren (Whereas, Moreover, Nevertheless, yet), Abwägung, Schluss mit Ausblick.</p>
-    </div>
+    <div class="model" id="m3"></div>
   </div>
 
   <div class="card">
@@ -5156,12 +5143,15 @@ document.getElementById('fReset').addEventListener('click',()=>{kset().clear();s
 document.getElementById('deckTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)switchDeck(b.dataset.deck);});
 
 /* ============ Writing: Wortzähler ============ */
+/* Wortgrenzen pro Teil: einzige Quelle für Zähler, Zielangabe, Prompts und KI Beschreibung (T-0007) */
+const WRITING_LIMITS=Object.freeze({'1':[30,40],'2':[120,150],'3':[180,220]});
 function countWords(t){return t.trim()?t.trim().split(/\s+/).length:0;}
-document.querySelectorAll('textarea[data-min]').forEach(ta=>{
+document.querySelectorAll('textarea[data-part]').forEach(ta=>{
   const out=document.getElementById(ta.id+'-wc');
+  const [min,max]=WRITING_LIMITS[ta.dataset.part];
+  out.nextElementSibling.textContent='Ziel: '+min+' bis '+max;
   ta.addEventListener('input',()=>{
     const n=countWords(ta.value);
-    const min=+ta.dataset.min,max=+ta.dataset.max;
     out.textContent=n+' Wörter';
     out.className=(n>=min&&n<=max)?'inrange':(n===0?'':'outrange');
   });
@@ -5185,23 +5175,76 @@ document.getElementById('wStart').addEventListener('click',()=>{
 document.getElementById('wStop').addEventListener('click',()=>{clearInterval(wInt);wT.className='timer-display';wT.textContent='45:00';});
 
 /* ============ Musterantworten toggeln ============ */
+function setModelVisible(btn,shown){
+  document.getElementById(btn.dataset.model).classList.toggle('show',shown);
+  btn.textContent=shown?'Musterantwort ausblenden':'Musterantwort zeigen';
+}
 document.querySelectorAll('[data-model]').forEach(b=>{
   b.addEventListener('click',()=>{
-    const m=document.getElementById(b.dataset.model);
-    m.classList.toggle('show');
-    b.textContent=m.classList.contains('show')?'Musterantwort ausblenden':'Musterantwort zeigen';
+    setModelVisible(b,!document.getElementById(b.dataset.model).classList.contains('show'));
   });
 });
 
 /* ============ KI-Korrektur (funktioniert innerhalb von Claude) ============ */
-const taskDescriptions={
- '1':'Aptis Advanced Writing Teil 1 (Chat, informelles Register, je 30 bis 40 Woerter). Aufgabe: Drei Chat-Nachrichten beantworten. Laura fragt nach Projekten und was am meisten Freude macht. Marco fragt nach der groessten beruflichen Herausforderung und wie sie gemeistert wurde. Aisha fragt, wie man das Team bei knappen Deadlines motiviert.',
- '2':'Aptis Advanced Writing Teil 2 (formelle E-Mail an den Stadtrat, 120 bis 150 Woerter). Kontext: Die Hauptzufahrtsstrasse wird 6 Monate gesperrt, Umweg plus 25 Minuten pro Richtung. Pflichtpunkte laut Notizen: eigenes Gefuehl ausdruecken, Auswirkung auf den Alltag erklaeren, zwei Vorschlaege machen. Streng formelles Register, keine Kurzformen.',
- '3':'Aptis Advanced Writing Teil 3 (Artikel fuer eine Online-Publikation, 180 bis 220 Woerter, informativ und interessant). Thema: Cashless payments. Research Notes, die verarbeitet werden sollen: 2015 waren 18 Prozent der Zahlungen bargeldlos, 2025 sind es 61 Prozent, 12 Sekunden Zeitersparnis pro Transaktion, 27 Prozent der aelteren Menschen fuehlen sich ausgeschlossen, Kartengebuehren bis 2 Prozent pro Verkauf, Vorteile: Bequemlichkeit, Hygiene, weniger Diebstahl, Nachteile: Ausschluss, Gebuehren, Datenschutz.'
-};
+/* ============ Writing Tests (T-0007) ============
+   Prompt, Musterantwort und KI Beschreibung kommen aus demselben Datensatz. */
+const writingTests=Object.freeze([{"id": "w-network", "title": "Projektnetzwerk, Strassensperrung, bargeldlos", "part1": {"intro": "You have joined an international network for project professionals. You are talking to three members in the chat room.", "members": [{"name": "Laura", "msg": "Hi, welcome to the network! What kind of projects do you usually manage, and what do you enjoy most about your work?", "model": "Thanks Laura! I mainly manage infrastructure rollout projects across several regions, which means I'm juggling lots of partners at once. What I enjoy most is seeing a plan on paper turn into something real. How about you?"}, {"name": "Marco", "msg": "Nice to meet you! What has been the most challenging situation in your career so far, and how did you handle it?", "model": "Probably when a key subcontractor pulled out two weeks before a deadline. I didn't panic, though. I split the work between three smaller firms and we still delivered on time, which I'm quite proud of."}, {"name": "Aisha", "msg": "Welcome! How do you keep your team motivated when deadlines get tight?", "model": "Honestly, I try to be really transparent about why the deadline matters. I also break the work into small wins and celebrate each one. A bit of pizza on late evenings doesn't hurt either!"}]}, "part2": {"sender": "your local council", "email": "Dear resident, we are writing to inform you that, due to major construction work, the main access road to your neighbourhood will be closed for six months starting next month. The temporary route will add approximately 25 minutes to journeys in each direction. We apologise for any inconvenience caused. The City Council.", "notes": ["say how you feel about the situation", "explain the impact on your daily life", "make two suggestions"], "model": "Dear Sir or Madam,\n\nI am writing in response to your email concerning the six-month closure of the main access road. I must express my frustration at this announcement, particularly given how little notice residents have received.\n\nThe impact on my daily life would be considerable. An additional 50 minutes of travelling per day would mean leaving home before my child wakes up and returning after dinner, which I find unacceptable over such a long period.\n\nI would therefore like to make two suggestions. Firstly, the council could carry out the most disruptive work at night or during weekends, keeping the road partially open on weekdays. Secondly, a temporary shuttle service between the neighbourhood and the nearest station would ease the burden on commuters.\n\nI would be grateful if these options could be considered.\n\nYours faithfully,\nEnes", "tips": "Gefühl klar benannt (frustration), Auswirkung konkret gerechnet, zwei nummerierte Vorschläge (Firstly, Secondly), durchgehend formell, Yours faithfully weil Name unbekannt."}, "part3": {"site": "Modern Life Weekly", "topic": "Cashless payments", "notes": ["2015: 18 percent of payments cashless", "2025: 61 percent", "average time saved per transaction: 12 seconds", "27 percent of older residents feel excluded", "card fees for small shops: up to 2 percent per sale", "advantages: convenience, hygiene, less theft", "disadvantages: exclusion, fees, data privacy"], "title": "A World Without Wallets?", "model": "When did you last pay for your coffee in cash? If you cannot remember, you are far from alone. Whereas cashless payments accounted for a mere 18 percent of transactions in 2015, that figure had soared to 61 percent by 2025, and the trend shows no sign of slowing down.\n\nThe appeal is obvious. Tapping a card or phone saves an average of 12 seconds per transaction, queues move faster, and shopkeepers no longer worry about theft or handling coins. Moreover, many customers appreciate the added hygiene of contactless payment.\n\nNevertheless, the shift has a darker side. A striking 27 percent of older residents report feeling excluded from everyday services, while small shops face card fees of up to 2 percent per sale, costs which they can rarely afford to absorb. There are also growing concerns about data privacy, since every digital payment leaves a trace.\n\nTaking everything into account, the convenience of a cashless society is undeniable, yet it must not come at the price of excluding the vulnerable. The challenge for the coming years will be finding a system that combines digital speed with the freedom that only cash can guarantee.", "tips": "Titel als Frage, direkter Leser-Einstieg, ALLE Zahlen verarbeitet, C1-Konnektoren (Whereas, Moreover, Nevertheless, yet), Abwägung, Schluss mit Ausblick."}}, {"id": "w-fitness", "title": "Fitnessclub, Öffnungszeiten, E-Scooter", "part1": {"intro": "You have joined a fitness club and are chatting with three other members in the online forum.", "members": [{"name": "Tom", "msg": "Hey, good to have you here! What made you join the club?", "model": "Thanks, Tom! To be honest, I'd been sitting at a desk all day for years and my back started complaining. A colleague dragged me along to a class and I've been hooked ever since."}, {"name": "Nadia", "msg": "Hi! Which class would you recommend to a complete beginner, and why?", "model": "I'd definitely go for the Tuesday circuit class. It's short, the trainer explains every exercise really clearly, and nobody cares if you need a break. It's a great way to build confidence before trying anything harder."}, {"name": "Ben", "msg": "Welcome! How do you stay motivated on days when you just don't feel like training?", "model": "Good question! On those days I tell myself I'll only do ten minutes. Once I'm there, I usually stay for the whole session. Training with a friend helps too, because you can't easily cancel."}]}, "part2": {"sender": "the manager of your fitness club", "email": "Dear member, from next month our opening hours will change. The club will open at 8 a.m. instead of 6 a.m. on weekdays and will close at 6 p.m. on Sundays. Monthly fees will remain the same. Thank you for your understanding. Club Management.", "notes": ["express how you feel about the change", "explain why the early hours are important to you", "suggest an alternative solution"], "model": "Dear Sir or Madam,\n\nI am writing with regard to your recent email announcing the new opening hours. I must say that I was rather disappointed to learn that the club will no longer open at 6 a.m. on weekdays.\n\nAs I work full time and start at 8 a.m., the early morning is the only time I can train during the week. Under the new schedule, I would effectively lose four of my five weekly sessions, while continuing to pay the same monthly fee.\n\nI would therefore like to propose an alternative. If staffing costs are the main reason for the change, the club could open early on three weekdays only, perhaps with a reduced service. Alternatively, members could be offered a lower fee in return for the shorter opening hours.\n\nI look forward to hearing from you.\n\nYours faithfully,\nEnes", "tips": "Bezug mit with regard to, Gefühl (disappointed), Auswirkung mit konkreten Zahlen, Conditional (If staffing costs are...), zwei Alternativen mit Alternatively verbunden."}, "part3": {"site": "City Matters", "topic": "Electric scooters in cities", "notes": ["2019: 3 rental companies in the city", "2024: 11 companies, about 9000 scooters", "average trip: 1.8 kilometres", "42 percent of users would otherwise have walked", "scooter accidents doubled between 2020 and 2023", "advantages: fast, flexible, no emissions while riding", "disadvantages: blocked pavements, safety, short lifespan"], "title": "Saviour or Nuisance? The E-Scooter Question", "model": "Love them or hate them, electric scooters have become impossible to ignore. In 2019, just 3 rental companies operated in our city; by 2024, that number had risen to 11, with roughly 9000 scooters available on our streets.\n\nTheir popularity is easy to understand. They are fast, flexible and produce no emissions while being ridden, and the average trip covers only 1.8 kilometres, exactly the kind of short journey that would otherwise mean waiting for a bus.\n\nHowever, the picture is less green than it first appears. A surprising 42 percent of users admit that they would otherwise have walked, which means scooters are often replacing the healthiest form of transport rather than the car. Moreover, the number of accidents doubled between 2020 and 2023, and pedestrians regularly complain about scooters abandoned across pavements. Many vehicles also have a short lifespan, which raises questions about how sustainable they really are.\n\nSo, are e-scooters a solution or a problem? Arguably, they are both. With designated parking zones, stricter speed limits and longer-lasting models, they could play a useful role in urban transport. Without such rules, however, they risk becoming little more than an expensive nuisance.", "tips": "Einstieg mit Redewendung (Love them or hate them), Zahlen in Vergleichen (had risen to), überraschende Zahl als Wendepunkt (A surprising 42 percent), Frage im Schluss, Conditional als Ausblick."}}, {"id": "w-travel", "title": "Reiseforum, Flugannullierung, Sprachen lernen", "part1": {"intro": "You are a member of an online travel forum. Three members have sent you messages.", "members": [{"name": "Sofia", "msg": "Hi and welcome! What is the best place you have ever travelled to?", "model": "Hi Sofia! It's hard to choose, but I'd say Lisbon. I loved getting lost in the narrow streets, the food was incredible, and people were so relaxed. I'd go back tomorrow if I could!"}, {"name": "James", "msg": "Do you prefer planning every detail of a trip or just going with the flow?", "model": "A bit of both, really. I always book the flights and the first night in advance, but after that I like to stay flexible. Some of my best memories come from plans that didn't work out."}, {"name": "Lina", "msg": "What is one travel mistake you will never make again?", "model": "Oh, that's easy! I once booked a cheap hotel that turned out to be an hour from the city centre. I spent more on taxis than I'd saved on the room. Lesson learned!"}]}, "part2": {"sender": "an airline", "email": "Dear passenger, we regret to inform you that your flight to Lisbon on 14 June has been cancelled due to operational reasons. We have rebooked you on a flight departing two days later. If this is not convenient, please contact us. Customer Service Team.", "notes": ["express your feelings about the cancellation", "explain why the new date is a problem", "say what you expect the airline to do"], "model": "Dear Sir or Madam,\n\nI am writing in response to your email regarding the cancellation of my flight to Lisbon on 14 June. I must express my deep dissatisfaction, not only with the cancellation itself but also with the vague explanation provided.\n\nThe new departure date is simply not acceptable. I am travelling to attend a close friend's wedding, which takes place on 15 June. Arriving two days later would mean missing the event entirely, as well as losing two nights at a hotel that I have already paid for.\n\nI would therefore ask you to rebook me on another flight on 14 June, if necessary with a different airline. Should this not be possible, I expect a full refund as well as compensation in accordance with passenger rights regulations.\n\nI look forward to your prompt reply.\n\nYours faithfully,\nEnes", "tips": "Gefühl mit Steigerung (not only ... but also), konkreter Grund mit Datum, Inversion im Conditional (Should this not be possible), klare Forderung, formeller Schluss."}, "part3": {"site": "Lifelong Learning Today", "topic": "Learning a language as an adult", "notes": ["35 percent of adults have started learning a language in the last five years", "60 percent give up within the first year", "most common reasons: work, travel, family", "learners who practise 15 minutes a day progress twice as fast as weekly learners", "apps used by 70 percent of adult learners", "advantages: career, brain health, cultural understanding", "disadvantages: time, frustration, slow progress"], "title": "Never Too Late to Learn?", "model": "Many of us still believe that languages are best learnt in childhood. Yet a growing number of adults are proving otherwise: 35 percent say they have started learning a new language in the last five years, most often for work, travel or family reasons.\n\nThe benefits are considerable. A second language can open doors in one's career, and research suggests it may even help to keep the brain healthy in later life. Perhaps most importantly, it allows us to understand other cultures from the inside rather than through translation.\n\nThe reality, however, is often less inspiring. Around 60 percent of adult learners give up within the first year, usually because progress feels slow and busy schedules leave little time for study. It is no surprise, then, that apps have become so popular, with 70 percent of adult learners using them.\n\nInterestingly, the key to success appears to be consistency rather than intensity. Learners who practise for just 15 minutes a day progress twice as fast as those who study once a week. In other words, the question is not whether adults can learn a language, but whether they can turn it into a daily habit. Clearly, it is never too late to start.", "tips": "Gegenthese im Einstieg (Many of us still believe ... Yet), Gewichtung (Perhaps most importantly), Kontrast mit however, Umformulierung mit In other words, Schluss greift den Titel auf."}}, {"id": "w-work", "title": "Sportverein, Homeoffice Regel, Lebensmittelverschwendung", "part1": {"intro": "You have joined a local running club. Three members are chatting with you in the club app.", "members": [{"name": "Peter", "msg": "Welcome to the club! How long have you been running?", "model": "Thanks, Peter! Only about a year, actually. I started during a stressful phase at work and quickly realised it's the best way for me to switch off. I'm hoping to run my first half marathon soon."}, {"name": "Grace", "msg": "Do you prefer running alone or in a group?", "model": "Usually alone in the morning, because it's my quiet time before the day starts. But I'm joining the club because I'd like to push myself a bit more, and that's much easier with others around."}, {"name": "Omar", "msg": "What is your goal for this year?", "model": "My main goal is to finish a half marathon in under two hours. I know it's ambitious, but I've got a training plan and plenty of time. Any tips for the long runs would be welcome!"}]}, "part2": {"sender": "the Human Resources department of your company", "email": "Dear colleagues, from 1 March all employees will be required to work from the office five days a week. The current arrangement of two home office days will end. This decision has been taken to strengthen collaboration. HR Department.", "notes": ["give your reaction to the decision", "describe the benefits of the current arrangement for you and the team", "propose a compromise"], "model": "Dear Ms Keller,\n\nI am writing regarding the recent announcement that the two home office days will be discontinued from 1 March. While I fully understand the wish to strengthen collaboration, I must admit that I was concerned to read about this decision.\n\nThe current arrangement has proved highly effective for our team. On home office days, I am able to concentrate on planning and reporting without interruptions, and the time saved on commuting allows me to start earlier. Our project results over the past year suggest that productivity has not suffered in any way.\n\nI would therefore like to propose a compromise. Teams could agree on two or three fixed office days for meetings and joint work, while keeping one flexible home office day per week. This would encourage collaboration without losing the benefits of focused work.\n\nYours sincerely,\nEnes", "tips": "Name bekannt, deshalb Yours sincerely. Zugeständnis mit While I fully understand, Argument mit Beleg (Our project results), konkreter Kompromiss, sachlich und höflich."}, "part3": {"site": "Green Living Online", "topic": "Food waste at home", "notes": ["an average household throws away 90 kilograms of food per year", "about 30 percent of food produced worldwide is wasted", "value of food wasted per household: around 600 francs a year", "bread, fruit and vegetables most often thrown away", "8 percent of global greenhouse gas emissions linked to food waste", "causes: buying too much, confusion about best-before dates, poor storage", "solutions: planning meals, freezing, sharing apps"], "title": "The Hidden Cost in Our Bins", "model": "Take a quick look in your kitchen bin. Chances are you will find some bread, a few vegetables or fruit that went soft before anyone could eat it. You are not alone: the average household throws away around 90 kilograms of food every year, worth roughly 600 francs.\n\nThe problem is not only a private one. Globally, about 30 percent of all food produced is wasted, and food waste is linked to 8 percent of greenhouse gas emissions. In other words, every forgotten yoghurt contributes, in a small way, to climate change.\n\nSo why do we waste so much? The most common causes are surprisingly simple. We buy more than we need, we misunderstand best-before dates, which indicate quality rather than safety, and we store food badly.\n\nFortunately, the solutions are just as simple. Planning meals for the week and writing a shopping list prevents impulse buying. Freezing bread and leftovers can extend their life by months. Sharing apps, meanwhile, make it easy to pass on surplus food to neighbours.\n\nNone of these steps requires much effort, yet together they could save both money and resources. Perhaps the next time we reach for the bin, we should stop and think twice.", "tips": "Leser direkt ansprechen (Take a quick look), private und globale Ebene verbunden, Erklärung im Relativsatz (which indicate quality rather than safety), Lösungen parallel zu den Ursachen, Schluss mit Appell."}}, {"id": "w-books", "title": "Buchclub, Mieterhöhung, digitale Auszeit", "part1": {"intro": "You have joined an online book club. Three members have written to you.", "members": [{"name": "Emma", "msg": "Hi! What kind of books do you enjoy reading most?", "model": "Hi Emma! I'm a big fan of crime novels, especially Scandinavian ones. I love trying to work out who did it before the end. Recently, though, I've started reading more non-fiction about history too."}, {"name": "Luis", "msg": "Do you read on paper or on an e-reader?", "model": "Mostly on paper, to be honest. I spend all day looking at screens at work, so a real book feels like a break. I'll admit the e-reader is handy when I'm travelling, though."}, {"name": "Hannah", "msg": "Which book would you recommend to the group, and why?", "model": "I'd recommend The Remains of the Day. It's short, beautifully written and surprisingly moving. It's also perfect for discussion, because everyone seems to see the main character slightly differently. Have you read it?"}]}, "part2": {"sender": "the property management company of your building", "email": "Dear tenant, following the renovation of the entrance and staircase, your monthly rent will increase by 180 francs from 1 April. The work will take place between January and March. We thank you for your cooperation. Property Management.", "notes": ["express your feelings about the increase", "explain how the renovation affects you", "ask for specific information or changes"], "model": "Dear Sir or Madam,\n\nI am writing in response to your letter informing me that my monthly rent will rise by 180 francs from 1 April. I must say that I was surprised and concerned by the size of this increase, which represents more than ten percent of my current rent.\n\nWhile I appreciate that the entrance and staircase are in need of renovation, I do not believe that this work significantly improves the quality of my flat. Furthermore, three months of construction noise will make it very difficult for me to work from home as I regularly do.\n\nI would therefore be grateful if you could provide a detailed breakdown of the renovation costs and explain how the increase was calculated. I would also like to know whether a reduction in rent during the construction period could be considered.\n\nYours faithfully,\nEnes", "tips": "Zahl aus der Aufgabe aufgenommen und eingeordnet (more than ten percent), Zugeständnis mit While I appreciate, Folge erklärt, zwei präzise Bitten mit I would be grateful if."}, "part3": {"site": "Wellbeing Matters", "topic": "Taking a digital detox", "notes": ["average adult checks their phone 96 times a day", "average daily screen time: 4.5 hours", "48 percent say they feel stressed when separated from their phone", "participants in a one-week detox study reported 25 percent better sleep", "popular methods: phone-free evenings, app limits, screen-free weekends", "advantages: better sleep, more focus, more time for relationships", "disadvantages: fear of missing out, work expectations"], "title": "Switch Off to Switch On", "model": "How many times have you looked at your phone today? If you are like the average adult, the answer is around 96, adding up to roughly 4.5 hours of screen time every single day. It is hardly surprising, then, that more and more people are trying a so-called digital detox.\n\nThe idea is simple: for a set period, you deliberately reduce or stop using your devices. Some people choose phone-free evenings, others set limits on certain apps, and the more determined disappear offline for entire weekends.\n\nThe results can be remarkable. In one study, participants who spent a week without their phones reported sleeping 25 percent better. Many also describe being able to concentrate for longer and having more time for friends and family.\n\nThat said, switching off is easier said than done. Almost half of adults, 48 percent to be precise, admit to feeling stressed when separated from their phone, and many fear missing out on news or messages. For some, employers' expectations of constant availability make a complete break almost impossible.\n\nPerhaps the answer is not to abandon technology, but to use it more consciously. After all, your phone should work for you, not the other way round.", "tips": "Einstieg mit Leserfrage und Zahl, so-called für Fachbegriff, Aufzählung mit Some ... others ... the more determined, Kontrast mit That said und Redewendung (easier said than done), Schluss mit Pointe."}}]);
+function writingTaskDescription(t,part){
+  const lim=WRITING_LIMITS[part];
+  if(!lim)throw new Error('Unbekannter Writing Teil: '+part);
+  const range=lim[0]+' bis '+lim[1]+' Wörter';
+  if(part==='1')return 'Aptis Advanced Writing Teil 1 (Chat, informelles Register, je '+range+'). Kontext: '+t.part1.intro+' Nachrichten: '
+    +t.part1.members.map(function(m){return m.name+': "'+m.msg+'"';}).join(' | ');
+  if(part==='2')return 'Aptis Advanced Writing Teil 2 (formelle E-Mail an '+t.part2.sender+', '+range+'). E-Mail: "'+t.part2.email
+    +'" Pflichtpunkte laut Notizen: '+t.part2.notes.join('; ')+'. Streng formelles Register, keine Kurzformen.';
+  return 'Aptis Advanced Writing Teil 3 (Artikel für '+t.part3.site+', '+range+', informativ und interessant). Thema: '+t.part3.topic
+    +'. Research Notes: '+t.part3.notes.join('; ')+'.';
+}
+function writingParagraphs(text){return esc(text).replace(/\n/g,'<br>');}
+function writingRangeEn(part){const l=WRITING_LIMITS[part];return l[0]+' to '+l[1]+' words';}
+function writingModelBlock(heading,text,{tips,title}={}){
+  return '<h5>'+heading+' ('+countWords(text)+' Wörter'+(title?' ohne Titel':'')+')</h5><p class="en">'+(title?'<strong>'+esc(title)+'</strong><br><br>':'')
+    +writingParagraphs(text)+'</p>'+(tips?'<p style="margin-top:8px;font-size:13px">Merkmale: '+esc(tips)+'</p>':'');
+}
+let writingIndex=0,writingBag=null;
+function currentWritingTest(){return writingTests[writingIndex];}
+function renderWritingTest(){
+  const t=currentWritingTest(),p1=t.part1,p2=t.part2,p3=t.part3;
+  document.getElementById('wSetTitle').textContent='Writing Test '+(writingIndex+1)+' von '+writingTests.length+': '+t.title;
+  document.getElementById('wSetSel').value=String(writingIndex);
+  document.getElementById('wP1').innerHTML='<em>'+esc(p1.intro)+' Answer each message using '+writingRangeEn('1')+'.</em><br><br>'
+    +p1.members.map(function(m){return '<strong>'+esc(m.name)+':</strong> '+esc(m.msg);}).join('<br>');
+  document.querySelectorAll('#p-writing .wname').forEach(function(el,i){el.textContent=p1.members[i].name;});
+  document.getElementById('wP2').innerHTML='<em>You receive this email from '+esc(p2.sender)+':</em><br><br>"'+esc(p2.email)
+    +'"<br><br><em>Write an email ('+writingRangeEn('2')+'). Use these notes: '+esc(p2.notes.join(', '))+'.</em>';
+  document.getElementById('wP3').innerHTML='<em>"'+esc(p3.site)+'" is a website that accepts short articles from members of the public. You have been asked to contribute an article on the subject of "'
+    +esc(p3.topic)+'". You have done some research. Use the notes to write an article that is both informative and interesting ('+writingRangeEn('3')+'):</em><br><br>Research notes: '+esc(p3.notes.join(' · '));
+  document.getElementById('m1').innerHTML=p1.members.map(function(m){return writingModelBlock('Musterantwort an '+esc(m.name),m.model);}).join('')
+    +'<p style="margin-top:8px;font-size:13px">Merkmale: Kurzformen, konkretes Detail, natürliche Wendungen, oft eine Gegenfrage.</p>';
+  document.getElementById('m2').innerHTML=writingModelBlock('Musterantwort',p2.model,{tips:p2.tips});
+  document.getElementById('m3').innerHTML=writingModelBlock('Musterantwort',p3.model,{tips:p3.tips,title:p3.title});
+}
+function clearWritingWork(){
+  document.querySelectorAll('#p-writing textarea[data-part]').forEach(function(ta){ta.value='';ta.dispatchEvent(new Event('input'));});
+  [1,2,3].forEach(function(n){const fb=document.getElementById('fb'+n);fb.className='feedback-out';fb.textContent='';});
+  document.querySelectorAll('#p-writing [data-model]').forEach(function(b){setModelVisible(b,false);});
+}
+function selectWritingTest(i){
+  const hasText=[].some.call(document.querySelectorAll('#p-writing textarea[data-part]'),function(ta){return ta.value.trim();});
+  if(hasText&&!confirm('Deine Texte in diesem Test werden gelöscht. Weiter?')){document.getElementById('wSetSel').value=String(writingIndex);return;}
+  writingIndex=i;clearWritingWork();renderWritingTest();
+}
+document.getElementById('wSetSel').innerHTML=writingTests.map(function(t,i){return '<option value="'+i+'">Test '+(i+1)+': '+esc(t.title)+'</option>';}).join('');
+document.getElementById('wSetSel').addEventListener('change',function(e){selectWritingTest(parseInt(e.target.value,10));});
+document.getElementById('wNewSet').addEventListener('click',function(){
+  writingBag=writingBag||new ShuffleBag(writingTests.length);
+  selectWritingTest(writingBag.nextExcept(writingIndex));
+});
+renderWritingTest();
 function getTexts(part){
   if(part==='1'){
-    return 'Antwort an Laura:\n'+document.getElementById('w1a').value+'\n\nAntwort an Marco:\n'+document.getElementById('w1b').value+'\n\nAntwort an Aisha:\n'+document.getElementById('w1c').value;
+    const names=currentWritingTest().part1.members.map(function(m){return m.name;});
+    return ['w1a','w1b','w1c'].map(function(id,i){return 'Antwort an '+names[i]+':\n'+document.getElementById(id).value;}).join('\n\n');
   }
   return document.getElementById('w'+part).value;
 }
@@ -5220,7 +5263,7 @@ document.querySelectorAll('[data-fb]').forEach(btn=>{
     try{
       const full=await askClaude(
             'Du bist ein Aptis-Advanced-Pruefer. Bewerte den folgenden Kandidatentext streng nach den vier offiziellen Aptis-Kriterien.\n\n'
-            +'AUFGABE: '+taskDescriptions[part]+'\n\n'
+            +'AUFGABE: '+writingTaskDescription(currentWritingTest(),part)+'\n\n'
             +'KANDIDATENTEXT:\n'+text+'\n\n'
             +'Gib dein Feedback auf Deutsch (Schweizer Schreibweise: ss statt scharfem s, keine Gedankenstriche). Struktur:\n'
             +'1. GESCHAETZTES NIVEAU: (B1 / B2 / C1 / C2) mit einem Satz Begruendung\n'
@@ -5265,6 +5308,7 @@ class ShuffleBag{
     this.last=this.bag.pop();
     return this.last;
   }
+  nextExcept(i){const v=this.next();return v===i&&this.size>1?this.next():v;}
   take(n){
     const seen=new Set();
     while(seen.size<Math.min(n,this.size))seen.add(this.next());

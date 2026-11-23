@@ -69,6 +69,7 @@ KI Knöpfe funktionieren nur dort.
 | Zuordnungen (Fragen 26 bis 30) | 420 Items in 84 Aufgaben |
 | Listening | 46 Fragen zu 22 Aufnahmen |
 | Speaking | 24 Aufgaben (keine Testfragen) |
+| Writing | 5 komplette Tests mit 25 Musterantworten |
 | Karteikarten | 187 C1-Wörter plus 56 Reading-Wörter |
 | **Gesamt** | **2438 Testfragen** |
 
@@ -107,6 +108,13 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
   - `coreForecast` (Mittel der letzten 3, Abstand zu 44), `leverageList` (Gewinn = Anteil am Core x 50 x Fehlerquote,
     Fehlerquote mit `laplaceAccuracy` geglättet), `coreShares` aus `byTopic` und `byVocabType`
   - `renderCoreDiagnosis` läuft über `updateTopicInfo`, `recordCoreRun` und `loadCoreHistory`
+
+- Writing (T-0007):
+  - `writingTests`: `[{id,title,part1:{intro,members:[{name,msg,model}] (3)},part2:{sender,email,notes,model,tips},
+    part3:{site,topic,notes,title,model,tips}}]`, 5 Tests, Test 1 aus dem Buch Tab, Test 2 bis 5 selbst erstellt
+  - `WRITING_LIMITS` ist die einzige Quelle der Wortgrenzen (Textfelder tragen nur `data-part`), `writingTaskDescription`
+    baut die KI Beschreibung, `renderWritingTest` füllt Prompts, Namen und Musterantworten, Wortzahlen werden gezählt
+  - Tier 2 prüft jede Musterantwort: Wortlimit, Kurzformen in Teil 1 Pflicht, in Teil 2 verboten, Teil 3 enthält alle Zahlen
 
 ### Lernlogik
 
