@@ -96,6 +96,10 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
     (`idle`, `prep`, `speak`, `done`, Übergänge in `SPEAKING_TRANSITIONS`, Uhr von aussen über `tick`),
     `ShuffleBag` verhindert Wiederholungen (`take(n)` liefert n verschiedene, `bagsFor(pool)` einen Beutel pro Teil),
     `fmtClock` formatiert m:ss, alle Timer im Portal nutzen ihn (T-0006)
+- Speaking Aufnahme (T-0008): `SpeakingCapture` beobachtet die `SpeakingSession` und nimmt jede Sprechphase auf.
+  Adapter `MediaRecorderAdapter` (Aufnahme, `release()` gibt das Mikrofon frei) und `SpeechTranscriberAdapter`
+  (Web Speech API, en-GB), `NULL_CAPTURE` ohne Unterstützung. Die KI bekommt nur das Transkript
+  (`speakingFeedbackPrompt`), Aussprache ist aus Text nicht bewertbar. `tick` meldet jetzt auch Restzeit 0
 - Listening (T-0003):
   - `listeningTasks`: `{part1:[{id,title,script,q,a:[3],c,e}], part2:[{id,title,script,qs:[2]}], part3:[{id,title,script,items:[{s,c,e}] (4)]}`,
     10 plus 6 plus 6 Aufnahmen, selbst erstellt. `script` = `[{sp:'f'|'m', text}]`. Teil 3: `c` 0 Mann, 1 Frau, 2 beide
@@ -136,7 +140,7 @@ Alles liegt in einem einzigen `<script>`-Block am Dateiende.
   Hilfsverb, fehlendes have, Einzahl/Mehrzahl, few/little, mustn't-Falle und so weiter).
   Dazu eine Anfängerbox pro Thema und ein KI-Knopf. Alle KI Knöpfe laufen über `askClaude(prompt, {maxTokens})`
   (T-0006): Modelle aus `AI_MODELS` der Reihe nach (`claude-opus-5-5`, Rückfall `claude-sonnet-4-6`), nur Textblöcke,
-  `refusal` als Fehler mit `e.refusal`, das zuletzt erfolgreiche Modell wird zuerst probiert (`aiWorkingModel`).
+  `refusal` als Fehler mit `e.refusal` (Anzeige über `kiErrorText`, Stilvorgabe `KI_STYLE_DE`), das zuletzt erfolgreiche Modell wird zuerst probiert (`aiWorkingModel`).
   Thinking ist beim aktuellen Modell immer aktiv und zählt in `max_tokens`
 
 ### Simulationsmodi
@@ -193,7 +197,8 @@ Reading- und Matching-Arrays werden mit `json.dumps(..., ensure_ascii=False)` er
 ## Bekannte Lücken und nächste Schritte
 
 1. **Speaking**: Trainer mit Prüfungszeiten, 24 Aufgaben, Vorlagen, Phrasenbank und Checkliste
-   sind fertig (T-0002). Offen: Aufnahme im Browser und KI Feedback (noch kein Ticket)
+   sind fertig (T-0002). Aufnahme, Transkript und KI Feedback pro Antwort (T-0008). In Claude prüfen, ob das
+   Artifact Mikrofon und Spracherkennung freigibt, sonst Transkript selbst einfügen
 2. **Listening**: Trainer mit 46 Fragen und Sprachausgabe fertig (T-0003). Offen: mehr Aufnahmen, Akzente
 3. Reading Teil 3 und 4: alle neun kompletten Tests nutzen jetzt das Phrasenformat (T-0005).
    Die Buchvarianten mit Einzelwörtern bleiben als Einzelübung

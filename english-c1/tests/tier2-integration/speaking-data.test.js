@@ -57,3 +57,18 @@ test('für jede Aufgabe lässt sich ein vollständiger Prüfungsplan bauen', () 
     assert.equal(build('full', picked).length, 6);
   }
 });
+
+test('Feedback Prompt für jede echte Etappe enthält die vollständige Aufgabe', () => {
+  const build = portal.get('buildSpeakingPlan');
+  const prompt = portal.get('speakingFeedbackPrompt');
+  const n = Math.max(tasks.part1.length, tasks.part2.length, tasks.part3.length);
+  for (let i = 0; i < n; i++) {
+    const picked = { part1: tasks.part1[i % tasks.part1.length], part2: tasks.part2[i % tasks.part2.length], part3: tasks.part3[i % tasks.part3.length] };
+    for (const st of build('full', picked)) {
+      const p = prompt(st, 'I think this is a good example answer.', 40);
+      const t = st.task;
+      const expected = { photo: [...t.photos || [], st.question], topic: [t.theme, ...(t.qs || [])], present: [t.topic, ...(t.pro || []), ...(t.con || [])], followup: [st.question] }[st.kind];
+      for (const e of expected) assert.ok(p.includes(e), `${t.id} ${st.kind}: ${e}`);
+    }
+  }
+});

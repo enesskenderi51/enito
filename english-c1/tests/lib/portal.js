@@ -45,7 +45,7 @@ function createSandbox() {
   const store = new Map();
   const noop = () => 0;
   const sandbox = {
-    console, document: dom, URL: dom, Blob: function () {},
+    console, document: dom, navigator: dom, URL: dom, Blob: function () {},
     setTimeout: noop, setInterval: noop, clearInterval: noop,
     alert: noop, confirm: () => true,
     fetch: async () => { throw new Error('Netzwerk ist in Tests gesperrt'); },

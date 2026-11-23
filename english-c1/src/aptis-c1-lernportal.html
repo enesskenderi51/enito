@@ -4206,6 +4206,8 @@ footer{text-align:center;font-size:13px;color:var(--ink-soft);padding:30px 20px;
       <button class="btn" data-spmode="part3">Nur Teil 3</button>
       <button class="btn ghost" id="spAbort">Abbrechen</button>
     </div>
+    <p style="font-size:13px;margin-top:10px;text-align:center"><label><input type="checkbox" id="spRecord" checked> Antworten aufnehmen und transkribieren, danach KI Feedback</label></p>
+    <p id="spRecInfo" style="font-size:12px;color:var(--ink-soft);text-align:center"></p>
     <div id="spArea" style="display:none;margin-top:16px">
       <div class="mockstage" id="spStage">
         <h5 id="spPart"></h5>
@@ -4216,6 +4218,7 @@ footer{text-align:center;font-size:13px;color:var(--ink-soft);padding:30px 20px;
         <details><summary>Aufbauvorlage für diesen Teil</summary><div id="spTpl" style="padding:0 14px 10px"></div></details>
       </div>
       <div id="spDone" style="display:none">
+        <div id="spTakes"></div>
         <h4>Geschafft. Hör dir jetzt deine Aufnahme an und hake ab, was geklappt hat:</h4>
         <div id="spCheckDone"></div>
       </div>
@@ -4679,7 +4682,7 @@ async function explainWithAI(q,opt,correct,outEl,btn){
     const txt=await askClaude(prompt,{maxTokens:4000});
     outEl.innerHTML='<div style="background:var(--paper);border-left:4px solid var(--petrol);padding:10px 12px;border-radius:8px;white-space:pre-wrap;line-height:1.6;font-size:14px;text-align:left">'+txt.replace(/</g,'&lt;')+'</div>';
   }catch(e){
-    outEl.innerHTML='<div style="color:var(--bad);font-size:13px">'+(e.refusal?esc(e.message):'KI-Analyse gerade nicht verfügbar. Sie funktioniert, wenn die Datei in Claude geöffnet ist.')+'</div>';
+    outEl.innerHTML='<div style="color:var(--bad);font-size:13px">'+esc(kiErrorText(e,'KI-Analyse gerade nicht verfügbar. Sie funktioniert, wenn die Datei in Claude geöffnet ist.'))+'</div>';
   }
   btn.disabled=false;btn.textContent='KI-Erklaerung zu genau diesem Fehler';
 }
@@ -5265,7 +5268,7 @@ document.querySelectorAll('[data-fb]').forEach(btn=>{
             'Du bist ein Aptis-Advanced-Pruefer. Bewerte den folgenden Kandidatentext streng nach den vier offiziellen Aptis-Kriterien.\n\n'
             +'AUFGABE: '+writingTaskDescription(currentWritingTest(),part)+'\n\n'
             +'KANDIDATENTEXT:\n'+text+'\n\n'
-            +'Gib dein Feedback auf Deutsch (Schweizer Schreibweise: ss statt scharfem s, keine Gedankenstriche). Struktur:\n'
+            +KI_STYLE_DE+' Struktur:\n'
             +'1. GESCHAETZTES NIVEAU: (B1 / B2 / C1 / C2) mit einem Satz Begruendung\n'
             +'2. TASK FULFILMENT UND REGISTER: Sind alle Punkte der Aufgabe erfuellt? Stimmt das Register? Stimmt die Wortzahl?\n'
             +'3. GRAMMATIK: Liste jeden Fehler als "falsch -> richtig" mit kurzer Begruendung. Nenne auch, welche C1-Strukturen fehlen oder gut eingesetzt wurden.\n'
@@ -5279,7 +5282,7 @@ document.querySelectorAll('[data-fb]').forEach(btn=>{
       out.textContent=full;
     }catch(err){
       out.className='feedback-out show';
-      out.textContent=err.refusal?err.message:'Die KI-Korrektur ist gerade nicht erreichbar (funktioniert nur, wenn die Seite in Claude geoeffnet ist). Alternative: Nutze die Selbstcheck-Liste unten, vergleiche mit der Musterantwort, oder kopiere deinen Text direkt in den Chat mit Claude und bitte um eine Aptis-Korrektur.';
+      out.textContent=kiErrorText(err,'Die KI-Korrektur ist gerade nicht erreichbar (funktioniert nur, wenn die Seite in Claude geoeffnet ist). Alternative: Nutze die Selbstcheck-Liste unten, vergleiche mit der Musterantwort, oder kopiere deinen Text direkt in den Chat mit Claude und bitte um eine Aptis-Korrektur.');
     }
     spin.classList.remove('show');btn.disabled=false;
   });
@@ -5353,8 +5356,9 @@ class SpeakingSession{
   }
   tick(sec){
     if(this.state!=='prep'&&this.state!=='speak')return;
-    this.remaining-=sec;
-    if(this.remaining<=0)this.next();else this.onChange(this,false);
+    this.remaining=Math.max(0,this.remaining-sec);
+    this.onChange(this,false);
+    if(this.remaining===0)this.next();
   }
   abort(){if(this.state!=='idle')this.go('idle',0);}
 }
@@ -5402,7 +5406,14 @@ function renderSpeaking(s,newStage){
 }
 function startSpeaking(mode){
   clearInterval(speakingTimer);
-  speakingSession=new SpeakingSession(buildSpeakingPlan(mode,pickSpeakingTasks()),renderSpeaking);
+  if(speakingCapture)speakingCapture.takes.forEach(function(t){if(t.audioUrl)URL.revokeObjectURL(t.audioUrl);});
+  const capture=speakingCapture=makeSpeakingCapture();
+  document.getElementById('spTakes').innerHTML='';
+  speakingSession=new SpeakingSession(buildSpeakingPlan(mode,pickSpeakingTasks()),function(s,newStage){
+    renderSpeaking(s,newStage);
+    capture.onSessionChange(s,newStage);
+    if(s.state==='done')renderSpeakingTakes(capture);
+  });
   document.getElementById('spArea').style.display='block';
   speakingSession.start();
   speakingTimer=setInterval(function(){speakingSession.tick(1);if(speakingSession.state==='done')clearInterval(speakingTimer);},1000);
@@ -5415,6 +5426,154 @@ document.getElementById('spAbort').addEventListener('click',function(){
   document.getElementById('spArea').style.display='none';
 });
 renderSpeakingStatic();
+
+/* ============ Speaking Aufnahme und KI Feedback (T-0008) ============
+   Die Claude API nimmt kein Audio: aufgenommen wird im Browser, transkribiert per Web Speech API,
+   an die KI geht nur das Transkript. SpeakingCapture beobachtet die SpeakingSession (Observer),
+   Recorder und Transcriber sind austauschbare Adapter (Strategy, Null Object bei fehlender Unterstützung). */
+const NULL_CAPTURE=Object.freeze({start:function(){},stop:function(){return Promise.resolve({});}});
+function wordsPerMinute(text,sec){return sec>0?Math.round(countWords(text)/sec*60):0;}
+function transcriptFromResults(results){
+  return [].filter.call(results,function(r){return r.isFinal;}).map(function(r){return r[0].transcript.trim();}).filter(Boolean).join(' ');
+}
+function speakingTaskText(st){
+  const t=st.task;
+  if(st.kind==='photo')return 'Teil 1 Fotovergleich. Foto A: '+t.photos[0]+'. Foto B: '+t.photos[1]+'. Frage: '+st.question;
+  if(st.kind==='topic')return 'Teil 2 Abstraktes Thema "'+t.theme+'". Fragen: '+t.qs.map(function(q,i){return (i+1)+'. '+q;}).join(' ');
+  if(st.kind==='present')return 'Teil 3 Präsentation: '+t.topic+' Dafür: '+t.pro.join('; ')+'. Dagegen: '+t.con.join('; ')+'.';
+  return 'Teil 3 Nachfrage ohne Vorbereitung: '+st.question;
+}
+function speakingFeedbackPrompt(st,transcript,seconds){
+  return 'Du bist ein Aptis Advanced Prüfer für Speaking. Bewerte die folgende Antwort streng nach den Aptis Kriterien '
+    +'(Task Fulfilment, Grammatical Range and Accuracy, Vocabulary Range and Accuracy, Fluency, Cohesion and Coherence).\n\n'
+    +'AUFGABE: '+speakingTaskText(st)+'\n'
+    +'SPRECHZEIT: '+seconds+' von '+st.speak+' Sekunden\n'
+    +'UMFANG: '+countWords(transcript)+' Wörter, '+wordsPerMinute(transcript,seconds)+' Wörter pro Minute\n\n'
+    +'TRANSKRIPT (automatisch erstellt oder diktiert, Erkennungsfehler sind möglich, Satzzeichen fehlen oft):\n'+transcript+'\n\n'
+    +'Wichtig: Die Aussprache kannst du aus Text nicht beurteilen. Erwähne das in einem Satz und bewerte sie nicht. '
+    +'Offensichtliche Erkennungsfehler nicht als Grammatikfehler werten.\n'
+    +KI_STYLE_DE+' Struktur:\n'
+    +'1. GESCHÄTZTES NIVEAU (B1 / B2 / C1 / C2) mit einem Satz Begründung\n'
+    +'2. TASK FULFILMENT: Alle Teile der Aufgabe beantwortet? Zeit genutzt?\n'
+    +'3. GRAMMATIK: jeden Fehler als "falsch -> richtig", dazu welche C1 Strukturen fehlen oder gut eingesetzt wurden\n'
+    +'4. VOKABULAR: zu einfache oder wiederholte Wörter mit konkreten C1 Alternativen\n'
+    +'5. KOHÄRENZ: Aufbau und Konnektoren\n'
+    +'6. FLÜSSIGKEIT: Einschätzung aus Wortzahl und Tempo\n'
+    +'7. VERBESSERTE VERSION: die Antwort als C1 Version zum laut Nachsprechen\n'
+    +'8. DER EINE TIPP: Was bringt beim nächsten Versuch am meisten Punkte?\n\n'
+    +'Antworte NUR mit dem Feedback, ohne Einleitung.';
+}
+class SpeakingCapture{
+  constructor(recorder,transcriber){this.recorder=recorder;this.transcriber=transcriber;this.takes=[];this.pending=[];this.active=null;}
+  onSessionChange(s,newStage){
+    if(this.active&&(newStage||s.state!=='speak'))this.finish();
+    if(s.state==='speak'&&!this.active){
+      this.active={index:s.index,stage:s.current,remaining:s.current.speak};
+      this.recorder.start();this.transcriber.start();
+    }
+    if(this.active)this.active.remaining=s.remaining;
+    if(s.state==='done'||s.state==='idle'){const rec=this.recorder;this.whenDone().then(function(){if(rec.release)rec.release();});}
+  }
+  finish(){
+    const a=this.active,take={index:a.index,stage:a.stage,seconds:a.stage.speak-a.remaining,audioUrl:null,transcript:''};
+    this.active=null;this.takes.push(take);
+    this.pending.push(Promise.all([this.recorder.stop(),this.transcriber.stop()]).then(function(r){
+      take.audioUrl=r[0].audioUrl||null;take.transcript=r[1].transcript||'';
+    }));
+  }
+  whenDone(){return Promise.all(this.pending);}
+}
+class MediaRecorderAdapter{
+  constructor(media,Recorder){this.media=media;this.Recorder=Recorder;this.stream=null;this.rec=null;this.starting=null;this.chunks=[];}
+  release(){if(this.stream){this.stream.getTracks().forEach(function(t){t.stop();});this.stream=null;}}
+  start(){
+    const self=this;
+    this.starting=(this.stream?Promise.resolve(this.stream):this.media.getUserMedia({audio:true})).then(function(stream){
+      self.stream=stream;self.chunks=[];
+      self.rec=new self.Recorder(stream);
+      self.rec.ondataavailable=function(e){if(e.data&&e.data.size)self.chunks.push(e.data);};
+      self.rec.start();
+    }).catch(function(){self.rec=null;});
+  }
+  stop(){
+    const self=this;
+    return Promise.resolve(this.starting).then(function(){
+      const rec=self.rec;self.rec=null;
+      if(!rec)return {audioUrl:null};
+      return new Promise(function(resolve){
+        rec.onstop=function(){resolve({audioUrl:self.chunks.length?URL.createObjectURL(new Blob(self.chunks,{type:rec.mimeType||'audio/webm'})):null});};
+        rec.stop();
+      });
+    });
+  }
+}
+class SpeechTranscriberAdapter{
+  constructor(Recognition){this.Recognition=Recognition;this.rec=null;this.done='';this.current='';this.finished=null;}
+  start(){
+    const self=this,r=new this.Recognition();
+    this.rec=r;this.done='';this.current='';this.finished=null;
+    r.lang='en-GB';r.continuous=true;r.interimResults=false;
+    r.onresult=function(e){self.current=transcriptFromResults(e.results);};
+    /* Chrome beendet die Erkennung nach Pausen: solange die Etappe läuft, neu starten */
+    r.onend=function(){
+      self.done=(self.done+' '+self.current).trim();self.current='';
+      if(self.rec===r){try{r.start();}catch(e){}}else if(self.finished)self.finished();
+    };
+    try{r.start();}catch(e){}
+  }
+  stop(){
+    const self=this,r=this.rec;
+    if(!r)return Promise.resolve({transcript:''});
+    this.rec=null;
+    return new Promise(function(resolve){
+      let timer=null;
+      const finish=function(){clearTimeout(timer);self.finished=null;resolve({transcript:(self.done+' '+self.current).trim()});};
+      self.finished=finish;
+      timer=setTimeout(finish,1500);
+      try{r.stop();}catch(e){finish();}
+    });
+  }
+}
+const SpeechRecognitionCtor=window.SpeechRecognition||window.webkitSpeechRecognition;
+const speakingCanRecord=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
+let speakingCapture=null;
+function makeSpeakingCapture(){
+  const on=document.getElementById('spRecord').checked;
+  return new SpeakingCapture(
+    on&&speakingCanRecord?new MediaRecorderAdapter(navigator.mediaDevices,window.MediaRecorder):NULL_CAPTURE,
+    on&&SpeechRecognitionCtor?new SpeechTranscriberAdapter(SpeechRecognitionCtor):NULL_CAPTURE);
+}
+function speakingTakeHtml(t,i){
+  return '<div class="card" style="margin-top:12px"><h5>'+esc(SPEAKING_LABELS[t.stage.kind])+' · Etappe '+(t.index+1)+' · '+t.seconds+' Sek. gesprochen</h5>'
+    +(t.audioUrl?'<audio controls src="'+esc(t.audioUrl)+'" style="width:100%;margin:6px 0"></audio>':'')
+    +'<textarea data-taketext="'+i+'" rows="4" style="width:100%" placeholder="Kein automatisches Transkript. Diktiere oder tippe deine Antwort hier ein...">'+esc(t.transcript)+'</textarea>'
+    +'<div style="margin-top:6px"><button class="btn gold" data-takefb="'+i+'">KI Feedback</button></div>'
+    +'<div class="feedback-out" data-takeout="'+i+'"></div></div>';
+}
+function renderSpeakingTakes(capture){
+  const el=document.getElementById('spTakes');
+  el.innerHTML='<p style="font-size:13px">Aufnahmen werden abgeschlossen...</p>';
+  capture.whenDone().then(function(){
+    if(capture!==speakingCapture)return;
+    el.innerHTML='<h4>Deine Antworten</h4><p style="font-size:13px">Hör dir jede Antwort an, korrigiere das Transkript wenn nötig und hol dir Feedback. Die KI bekommt nur den Text, die Aussprache kann sie nicht beurteilen.</p>'
+      +capture.takes.map(speakingTakeHtml).join('');
+  });
+}
+document.getElementById('spTakes').addEventListener('click',function(ev){
+  const b=ev.target.closest('[data-takefb]');if(!b)return;
+  const i=b.dataset.takefb,take=speakingCapture.takes[i];
+  const text=document.querySelector('[data-taketext="'+i+'"]').value.trim(),out=document.querySelector('[data-takeout="'+i+'"]');
+  out.className='feedback-out show';
+  if(countWords(text)<5){out.textContent='Bitte zuerst das Transkript einfügen, mindestens ein paar Sätze.';return;}
+  out.textContent='Analysiere deine Antwort nach den Aptis Kriterien...';b.disabled=true;
+  askClaude(speakingFeedbackPrompt(take.stage,text,take.seconds),{maxTokens:6000})
+    .then(function(t){out.textContent=t;})
+    .catch(function(e){out.textContent=kiErrorText(e,'KI Feedback gerade nicht erreichbar. Es funktioniert, wenn die Seite in Claude geöffnet ist.');})
+    .then(function(){b.disabled=false;});
+});
+document.getElementById('spRecInfo').textContent='Aufnahme: '+(speakingCanRecord?'verfügbar':'nicht verfügbar')+' · Transkript: '
+  +(SpeechRecognitionCtor?'verfügbar (Chrome erkennt über Server von Google, Safari auf dem Gerät)':'nicht verfügbar, du kannst es danach selbst einfügen')
+  +'. Aufnahmen bleiben im Browser, an die KI geht nur Text.';
 
 /* ============ Listening Trainer (T-0003) ============
    Daten: eingefrorene Konstanten. Stimme: Strategy mit speak(script, opts) und cancel(),
@@ -7581,6 +7740,8 @@ document.getElementById('coreDiag').addEventListener('click',function(ev){
    Ein Helfer für alle KI Knöpfe. Probiert die Modelle der Reihe nach, falls das Artifact
    ein Modell nicht freigibt. Thinking ist beim aktuellen Modell immer aktiv und zählt in max_tokens. */
 const AI_MODELS=Object.freeze(['claude-opus-5-5','claude-sonnet-4-6']);
+const KI_STYLE_DE='Gib dein Feedback auf Deutsch (Schweizer Schreibweise: ss statt scharfem s, keine Gedankenstriche).';
+function kiErrorText(e,fallback){return e.refusal?e.message:fallback;}
 let aiWorkingModel=null; /* zuletzt erfolgreiches Modell, wird zuerst probiert */
 function aiError(message,refusal){const e=new Error(message);e.refusal=!!refusal;return e;}
 async function askClaude(prompt,{maxTokens=4000}={},fetchFn){
