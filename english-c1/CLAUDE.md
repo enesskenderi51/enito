@@ -67,11 +67,11 @@ KI Knöpfe funktionieren nur dort.
 | Vocabulary | 1011 Fragen (592 Collocation, 158 Word Pair, 146 Definition, 75 Usage, 40 Word Formation) |
 | Reading | 313 Fragen in 52 Tasks, 9 komplette Tests (A bis I), davon 16 Einzelwort Übungsvarianten |
 | Zuordnungen (Fragen 26 bis 30) | 420 Items in 84 Aufgaben |
-| Listening | 76 Fragen zu 34 Aufnahmen, 5 Akzente |
+| Listening | 70 Fragen zu 34 Aufnahmen, 5 Akzente |
 | Speaking | 24 Aufgaben (keine Testfragen) |
 | Writing | 5 komplette Tests mit 25 Musterantworten |
 | Karteikarten | 187 C1-Wörter plus 56 Reading-Wörter |
-| **Gesamt** | **2468 Testfragen** |
+| **Gesamt** | **2462 Testfragen** |
 
 ### Datenstrukturen im Script
 
